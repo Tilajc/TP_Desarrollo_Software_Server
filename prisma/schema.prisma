@@ -19,11 +19,10 @@ model User {
   email    String  @unique
   password String
   docket   String?
-  role     Role    @default(STUDENT)
+  role     Role
 
-  taughtSubjects Subject[]        @relation("TeacherSubjects")
-  enrollments    StudentSubject[]
-  createdCards   Card[]
+  teachingClasses Class[]
+  enrollments     ClassSubscription[]
 }
 
 model Subject {
@@ -31,24 +30,35 @@ model Subject {
   name        String
   description String?
 
-  teacherId Int?
-  teacher   User? @relation("TeacherSubjects", fields: [teacherId], references: [id])
-
-  students StudentSubject[]
-  topics   Topic[]
+  classes Class[]
+  topics  Topic[]
 }
 
-model StudentSubject {
-  id        Int     @id @default(autoincrement())
-  studentId Int
+model Class {
+  id     Int     @id @default(autoincrement())
+  year   Int?
+  status String?
+
+  teacherId Int
+  teacher   User @relation(fields: [teacherId], references: [id])
+
   subjectId Int
-  year      Int?
-  status    String?
+  subject   Subject @relation(fields: [subjectId], references: [id])
 
-  student User    @relation(fields: [studentId], references: [id])
-  subject Subject @relation(fields: [subjectId], references: [id])
+  classSubscriptions ClassSubscription[]
+}
 
-  @@unique([studentId, subjectId])
+model ClassSubscription {
+  id     Int     @id @default(autoincrement())
+  status String?
+
+  classId Int
+  class   Class @relation(fields: [classId], references: [id])
+
+  studentId Int?
+  student   User? @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, classId])
 }
 
 model Topic {
@@ -78,9 +88,6 @@ model Card {
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
-
-  authorId Int?
-  author   User? @relation(fields: [authorId], references: [id])
 
   hints Hint[]
 }
