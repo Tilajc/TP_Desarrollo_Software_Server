@@ -3,18 +3,92 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  lastName String
+  email    String  @unique
+  password String
+  docket   String?
+  role     Role    @default(STUDENT)
+
+  taughtSubjects Subject[]        @relation("TeacherSubjects")
+  enrollments    StudentSubject[]
+  createdCards   Card[]
 }
 
 model Subject {
-  id          Int @id @default(autoincrement())
-  nombre      String
-  descripcion String 
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  teacherId Int?
+  teacher   User? @relation("TeacherSubjects", fields: [teacherId], references: [id])
+
+  students StudentSubject[]
+  topics   Topic[]
 }
-model User {
-  id       Int @id @default(autoincrement())
-  nombre   String
-  apellido String
-  email    String
-  password String
+
+model StudentSubject {
+  id        Int     @id @default(autoincrement())
+  studentId Int
+  subjectId Int
+  year      Int?
+  status    String?
+
+  student User    @relation(fields: [studentId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([studentId, subjectId])
+}
+
+model Topic {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  summaries Summary[]
+  cards     Card[]
+}
+
+model Summary {
+  id      Int    @id @default(autoincrement())
+  title   String
+  content String
+
+  topicId Int
+  topic   Topic @relation(fields: [topicId], references: [id])
+}
+
+model Card {
+  id       Int    @id @default(autoincrement())
+  question String
+  answer   String
+
+  topicId Int
+  topic   Topic @relation(fields: [topicId], references: [id])
+
+  authorId Int?
+  author   User? @relation(fields: [authorId], references: [id])
+
+  hints Hint[]
+}
+
+model Hint {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  cardId Int
+  card   Card @relation(fields: [cardId], references: [id])
 }
