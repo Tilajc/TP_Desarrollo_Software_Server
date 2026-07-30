@@ -7,7 +7,14 @@ datasource db {
 }
 
 model Subject {
-  id          Int      @id @default(0)
-  nombre      String   @default("Sin nombre")
-  descripcion String   @default("Sin descripción") 
+  id          Int @id @default(autoincrement())
+  nombre      String
+  descripcion String 
+}
+model User {
+  id       Int @id @default(autoincrement())
+  nombre   String
+  apellido String
+  email    String
+  password String
 }
