@@ -55,8 +55,8 @@ model ClassSubscription {
   classId Int
   class   Class @relation(fields: [classId], references: [id])
 
-  studentId Int?
-  student   User? @relation(fields: [studentId], references: [id])
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, classId])
 }
