@@ -12,6 +12,12 @@ enum Role {
   STUDENT
 }
 
+enum Status {
+  CURSANDO
+  FINALIZADO
+  ABANDONADO
+}
+
 model User {
   id       Int     @id @default(autoincrement())
   name     String
@@ -53,7 +59,7 @@ model Class {
 
 model ClassSubscription {
   id     Int     @id @default(autoincrement())
-  status String?
+  status Status
   active Boolean @default(true)
 
   classId Int

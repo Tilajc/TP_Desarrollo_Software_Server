@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'TEACHER', 'STUDENT');
 
+-- CreateEnum
+CREATE TYPE "Status" AS ENUM ('CURSANDO', 'FINALIZADO', 'ABANDONADO');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -40,7 +43,7 @@ CREATE TABLE "Class" (
 -- CreateTable
 CREATE TABLE "ClassSubscription" (
     "id" SERIAL NOT NULL,
-    "status" TEXT,
+    "status" "Status" NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "classId" INTEGER NOT NULL,
     "studentId" INTEGER NOT NULL,
