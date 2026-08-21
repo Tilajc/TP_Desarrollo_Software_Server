@@ -2,7 +2,9 @@ import prisma from "../lib/prisma.js";
 
 export const getSubjects = async (req, res) => {
   try {
-    const subjects = await prisma.subject.findMany();
+    const subjects = await prisma.subject.findMany({
+      where: { active: true },
+    });
 
     return res.status(200).json(subjects);
   } catch (error) {
@@ -16,7 +18,7 @@ export const getSubjectById = async (req, res) => {
     const id = Number(req.params.id);
 
     const subject = await prisma.subject.findUnique({
-      where: { id },
+      where: { id, active: true },
     });
 
     if (!subject) {
@@ -54,7 +56,7 @@ export const updateSubject = async (req, res) => {
     const { name, description } = req.body;
 
     const existingSubject = await prisma.subject.findUnique({
-      where: { id },
+      where: { id, active: true },
     });
 
     if (!existingSubject) {
@@ -62,7 +64,7 @@ export const updateSubject = async (req, res) => {
     }
 
     const updatedSubject = await prisma.subject.update({
-      where: { id },
+      where: { id, active: true },
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
@@ -88,19 +90,14 @@ export const deleteSubject = async (req, res) => {
       return res.status(404).json({ message: "Materia no encontrada" });
     }
 
-    await prisma.subject.delete({
+    await prisma.subject.update({
       where: { id },
+      data: { active: false },
     });
 
     return res.status(200).json({ message: "Materia eliminada exitosamente" });
   } catch (error) {
     console.error("Error deleting subject:", error);
-    if (error.code === "P2003") {
-      return res.status(400).json({
-        message:
-          "No se puede eliminar la materia porque está referenciada por otras entidades.",
-      });
-    }
 
     return res.status(500).json({ message: "Error al eliminar la materia" });
   }

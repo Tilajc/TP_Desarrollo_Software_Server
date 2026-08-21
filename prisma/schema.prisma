@@ -20,6 +20,7 @@ model User {
   password String
   docket   String?
   role     Role
+  active   Boolean @default(true)
 
   teachingClasses Class[]
   enrollments     ClassSubscription[]
@@ -29,6 +30,7 @@ model Subject {
   id          Int     @id @default(autoincrement())
   name        String
   description String?
+  active      Boolean @default(true)
 
   classes Class[]
   topics  Topic[]
@@ -38,6 +40,7 @@ model Class {
   id     Int     @id @default(autoincrement())
   year   Int?
   status String?
+  active Boolean @default(true)
 
   teacherId Int
   teacher   User @relation(fields: [teacherId], references: [id])
@@ -51,6 +54,7 @@ model Class {
 model ClassSubscription {
   id     Int     @id @default(autoincrement())
   status String?
+  active Boolean @default(true)
 
   classId Int
   class   Class @relation(fields: [classId], references: [id])
@@ -62,8 +66,9 @@ model ClassSubscription {
 }
 
 model Topic {
-  id   Int    @id @default(autoincrement())
-  name String
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
 
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id])
@@ -73,18 +78,20 @@ model Topic {
 }
 
 model Summary {
-  id      Int    @id @default(autoincrement())
+  id      Int     @id @default(autoincrement())
   title   String
   content String
+  active  Boolean @default(true)
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
 }
 
 model Card {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   question String
   answer   String
+  active   Boolean @default(true)
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
@@ -93,8 +100,9 @@ model Card {
 }
 
 model Hint {
-  id      Int    @id @default(autoincrement())
+  id      Int     @id @default(autoincrement())
   content String
+  active  Boolean @default(true)
 
   cardId Int
   card   Card @relation(fields: [cardId], references: [id])
