@@ -3,11 +3,107 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  lastName String
+  email    String  @unique
+  password String
+  docket   String?
+  role     Role
+  active   Boolean @default(true)
+
+  teachingClasses Class[]
+  enrollments     ClassSubscription[]
 }
 
 model Subject {
-  id          Int      @id @default(0)
-  nombre      String   @default("Sin nombre")
-  descripcion String   @default("Sin descripción") 
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  active      Boolean @default(true)
+
+  classes Class[]
+  topics  Topic[]
+}
+
+model Class {
+  id     Int     @id @default(autoincrement())
+  year   Int?
+  status String?
+  active Boolean @default(true)
+
+  teacherId Int
+  teacher   User @relation(fields: [teacherId], references: [id])
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  classSubscriptions ClassSubscription[]
+}
+
+model ClassSubscription {
+  id     Int     @id @default(autoincrement())
+  status String?
+  active Boolean @default(true)
+
+  classId Int
+  class   Class @relation(fields: [classId], references: [id])
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, classId])
+}
+
+model Topic {
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
+
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  summaries Summary[]
+  cards     Card[]
+}
+
+model Summary {
+  id      Int     @id @default(autoincrement())
+  title   String
+  content String
+  active  Boolean @default(true)
+
+  topicId Int
+  topic   Topic @relation(fields: [topicId], references: [id])
+}
+
+model Card {
+  id       Int     @id @default(autoincrement())
+  question String
+  answer   String
+  active   Boolean @default(true)
+
+  topicId Int
+  topic   Topic @relation(fields: [topicId], references: [id])
+
+  hints Hint[]
+}
+
+model Hint {
+  id      Int     @id @default(autoincrement())
+  content String
+  active  Boolean @default(true)
+
+  cardId Int
+  card   Card @relation(fields: [cardId], references: [id])
 }
