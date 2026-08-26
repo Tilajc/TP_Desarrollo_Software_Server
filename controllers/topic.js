@@ -88,6 +88,7 @@ export const updateTopic = async (req, res) => {
       where: { id, active: true },
       data: {
         ...(name !== undefined && { name }),
+        ...(active !== undefined && { active }),
       },
       include: {
         subject: true,
