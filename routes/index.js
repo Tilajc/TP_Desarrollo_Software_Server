@@ -1,12 +1,14 @@
 import { Router } from "express";
 import subjectRoutes from "./subject.js";
 import userRoutes from "./user.js";
+import topicRoutes from "./topic.js";
 // import classRoutes from "./class.js";
 
 const router = Router();
 
 router.use("/subjects", subjectRoutes);
 router.use("/users", userRoutes);
-//router.use("/classes", classRoutes);
+router.use("/topics", topicRoutes);
+// router.use("/classes", classRoutes);
 
 export default router;

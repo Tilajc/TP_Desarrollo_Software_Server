@@ -64,14 +64,14 @@ async function main() {
   console.log("Users created");
 
   // 3. Create Subjects
-  const mathSubject = await prisma.subject.create({
+  const Subject1 = await prisma.subject.create({
     data: {
       name: "Análisis Matemático I",
       description: "Cálculo diferencial e integral básico",
     },
   });
 
-  const programmingSubject = await prisma.subject.create({
+  const Subject2 = await prisma.subject.create({
     data: {
       name: "Algoritmos y Estructuras de Datos",
       description: "Fundamentos de algoritmos y estructuras de datos",
@@ -81,12 +81,12 @@ async function main() {
   console.log("Subjects created");
 
   // 4. Create Classes
-  const mathClass = await prisma.class.create({
+  const Class1 = await prisma.class.create({
     data: {
       year: 2026,
-      status: "active",
       teacherId: teacher1.id,
-      subjectId: mathSubject.id,
+      status: "active",
+      subjectId: Subject1.id,
     },
   });
 
@@ -96,12 +96,12 @@ async function main() {
   await prisma.classSubscription.createMany({
     data: [
       {
-        classId: mathClass.id,
+        classId: Class1.id,
         studentId: student1.id,
         status: "CURSANDO",
       },
       {
-        classId: mathClass.id,
+        classId: Class1.id,
         studentId: student2.id,
         status: "CURSANDO",
       },
@@ -114,7 +114,7 @@ async function main() {
   const topicDerivatives = await prisma.topic.create({
     data: {
       name: "Derivadas y Funciones",
-      subjectId: mathSubject.id,
+      subjectId: Subject1.id,
     },
   });
 
@@ -152,5 +152,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end(); // Close the PostgreSQL pool connection
   });

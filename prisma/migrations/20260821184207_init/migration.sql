@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'TEACHER', 'STUDENT');
 
+-- CreateEnum
+CREATE TYPE "Status" AS ENUM ('CURSANDO', 'FINALIZADO', 'ABANDONADO');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -10,6 +13,7 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "docket" TEXT,
     "role" "Role" NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -19,6 +23,7 @@ CREATE TABLE "Subject" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "active" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Subject_pkey" PRIMARY KEY ("id")
 );
@@ -28,6 +33,7 @@ CREATE TABLE "Class" (
     "id" SERIAL NOT NULL,
     "year" INTEGER,
     "status" TEXT,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "teacherId" INTEGER NOT NULL,
     "subjectId" INTEGER NOT NULL,
 
@@ -37,7 +43,8 @@ CREATE TABLE "Class" (
 -- CreateTable
 CREATE TABLE "ClassSubscription" (
     "id" SERIAL NOT NULL,
-    "status" TEXT,
+    "status" "Status" NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "classId" INTEGER NOT NULL,
     "studentId" INTEGER NOT NULL,
 
@@ -48,6 +55,7 @@ CREATE TABLE "ClassSubscription" (
 CREATE TABLE "Topic" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "subjectId" INTEGER NOT NULL,
 
     CONSTRAINT "Topic_pkey" PRIMARY KEY ("id")
@@ -58,6 +66,7 @@ CREATE TABLE "Summary" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "topicId" INTEGER NOT NULL,
 
     CONSTRAINT "Summary_pkey" PRIMARY KEY ("id")
@@ -68,6 +77,7 @@ CREATE TABLE "Card" (
     "id" SERIAL NOT NULL,
     "question" TEXT NOT NULL,
     "answer" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "topicId" INTEGER NOT NULL,
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
@@ -77,6 +87,7 @@ CREATE TABLE "Card" (
 CREATE TABLE "Hint" (
     "id" SERIAL NOT NULL,
     "content" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "cardId" INTEGER NOT NULL,
 
     CONSTRAINT "Hint_pkey" PRIMARY KEY ("id")
