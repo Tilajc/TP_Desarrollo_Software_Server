@@ -12,7 +12,7 @@ enum Role {
   STUDENT
 }
 
-enum Status {
+enum InscriptionStatus {
   CURSANDO
   FINALIZADO
   ABANDONADO
@@ -25,7 +25,7 @@ model User {
   email    String  @unique
   password String
   docket   String?
-  role     Role
+  role     Role    @default(STUDENT)
   active   Boolean @default(true)
 
   teachingClasses Class[]
@@ -45,7 +45,6 @@ model Subject {
 model Class {
   id     Int     @id @default(autoincrement())
   year   Int?
-  status String?
   active Boolean @default(true)
 
   teacherId Int
@@ -58,9 +57,9 @@ model Class {
 }
 
 model ClassSubscription {
-  id     Int     @id @default(autoincrement())
-  status Status
-  active Boolean @default(true)
+  id     Int               @id @default(autoincrement())
+  status InscriptionStatus
+  active Boolean           @default(true)
 
   classId Int
   class   Class @relation(fields: [classId], references: [id])

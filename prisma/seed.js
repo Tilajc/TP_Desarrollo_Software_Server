@@ -85,7 +85,6 @@ async function main() {
     data: {
       year: 2026,
       teacherId: teacher1.id,
-      status: "active",
       subjectId: Subject1.id,
     },
   });
