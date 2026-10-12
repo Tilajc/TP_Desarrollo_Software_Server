@@ -1,21 +1,22 @@
 import { Router } from "express";
-import subjectRoutes from "./subject.js";
-import userRoutes from "./user.js";
-import topicRoutes from "./topic.js";
-import classRoutes from "./class.js";
 import cardRoutes from "./card.js";
-import summaryRoutes from "./summary.js";
-import hintRoutes from "./hint.js";
+import classRoutes from "./class.js";
 import classSubscriptionRoutes from "./classSubscription.js";
+import hintRoutes from "./hint.js";
+import subjectRoutes from "./subject.js";
+import summaryRoutes from "./summary.js";
+import topicRoutes from "./topic.js";
+import userRoutes from "./user.js";
 
 const router = Router();
 
-router.use("/subjects", subjectRoutes);
-router.use("/users", userRoutes);
-router.use("/topics", topicRoutes);
-router.use("/classes", classRoutes);
 router.use("/cards", cardRoutes);
-router.use("/summaries", summaryRoutes);
+router.use("/classes", classRoutes);
+router.use("/class-subscriptions", classSubscriptionRoutes);
 router.use("/hints", hintRoutes);
+router.use("/subjects", subjectRoutes);
+router.use("/summaries", summaryRoutes);
+router.use("/topics", topicRoutes);
+router.use("/users", userRoutes);
 
 export default router;

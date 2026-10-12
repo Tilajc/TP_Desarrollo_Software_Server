@@ -1,33 +1,41 @@
 import prisma from "../lib/prisma.js";
 
+const classInclude = {
+  teacher: {
+    select: {
+      id: true,
+      name: true,
+      lastName: true,
+      email: true,
+      role: true,
+    },
+  },
+  subject: true,
+};
+
 export const getClasses = async (req, res) => {
   try {
     const classes = await prisma.class.findMany({
-      include: {
-        teacher: {
-          select: { id: true, name: true, email: true },
-        },
-        subject: true,
-      },
+      where: { active: true },
+      include: classInclude,
     });
 
     return res.status(200).json(classes);
   } catch (error) {
-    console.error("Error fetching clases:", error);
+    console.error("Error fetching classes:", error);
     return res.status(500).json({ message: "Error al obtener las clases" });
   }
 };
 
 export const getClassById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
 
-    const classItem = await prisma.class.findUnique({
-      where: { id: Number(id) },
+    const classItem = await prisma.class.findFirst({
+      where: { id, active: true },
       include: {
-        teacher: true,
-        subject: true,
-        classSubscriptions: true,
+        ...classInclude,
+        classSubscriptions: { where: { active: true } },
       },
     });
 
@@ -46,23 +54,24 @@ export const createClass = async (req, res) => {
   try {
     const { year, teacherId, subjectId } = req.body;
 
-    const [teacherExists, subjectExists] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: teacherId, role: "TEACHER", active: true },
-      }),
-      prisma.subject.findUnique({ where: { id: subjectId, active: true } }),
-    ]);
+    const teacherExists = await prisma.user.findFirst({
+      where: { id: teacherId, role: "TEACHER", active: true },
+    });
 
     if (!teacherExists) {
-      return res
-        .status(404)
-        .json({ message: "El profesor especificado no existe" });
+      return res.status(404).json({
+        message: "El profesor especificado no existe o no está activo",
+      });
     }
 
+    const subjectExists = await prisma.subject.findFirst({
+      where: { id: subjectId, active: true },
+    });
+
     if (!subjectExists) {
-      return res
-        .status(404)
-        .json({ message: "La materia especificada no existe" });
+      return res.status(404).json({
+        message: "La materia especificada no existe o no está activa",
+      });
     }
 
     const newClass = await prisma.class.create({
@@ -71,17 +80,7 @@ export const createClass = async (req, res) => {
         teacherId,
         subjectId,
       },
-      include: {
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-        subject: true,
-      },
+      include: classInclude,
     });
 
     return res.status(201).json(newClass);
@@ -93,47 +92,49 @@ export const createClass = async (req, res) => {
 
 export const updateClass = async (req, res) => {
   try {
-    const { id } = req.params;
-    const data = req.body;
+    const id = Number(req.params.id);
+    const { year, teacherId, subjectId } = req.body;
 
-    const existingClass = await prisma.class.findUnique({
-      where: { id: Number(id) },
+    const existingClass = await prisma.class.findFirst({
+      where: { id, active: true },
     });
 
     if (!existingClass) {
       return res.status(404).json({ message: "Clase no encontrada" });
     }
 
-    if (data.teacherId) {
-      const teacherExists = await prisma.user.findUnique({
-        where: { id: data.teacherId, role: "TEACHER", active: true },
+    if (teacherId !== undefined) {
+      const teacherExists = await prisma.user.findFirst({
+        where: { id: teacherId, role: "TEACHER", active: true },
       });
-      if (!teacherExists)
-        return res.status(404).json({ message: "El profesor no existe" });
+
+      if (!teacherExists) {
+        return res.status(404).json({
+          message: "El profesor especificado no existe o no está activo",
+        });
+      }
     }
 
-    if (data.subjectId) {
-      const subjectExists = await prisma.subject.findUnique({
-        where: { id: data.subjectId },
+    if (subjectId !== undefined) {
+      const subjectExists = await prisma.subject.findFirst({
+        where: { id: subjectId, active: true },
       });
-      if (!subjectExists)
-        return res.status(404).json({ message: "La materia no existe" });
+
+      if (!subjectExists) {
+        return res.status(404).json({
+          message: "La materia especificada no existe o no está activa",
+        });
+      }
     }
 
     const updatedClass = await prisma.class.update({
-      where: { id: Number(id) },
-      data,
-      include: {
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-        subject: true,
+      where: { id },
+      data: {
+        ...(year !== undefined && { year }),
+        ...(teacherId !== undefined && { teacherId }),
+        ...(subjectId !== undefined && { subjectId }),
       },
+      include: classInclude,
     });
 
     return res.status(200).json(updatedClass);
@@ -145,24 +146,24 @@ export const updateClass = async (req, res) => {
 
 export const deleteClass = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
 
-    const existingClass = await prisma.class.findUnique({
-      where: { id: Number(id) },
+    const existingClass = await prisma.class.findFirst({
+      where: { id, active: true },
     });
 
     if (!existingClass) {
       return res.status(404).json({ message: "Clase no encontrada" });
     }
 
-    await prisma.class.delete({
-      where: { id: Number(id) },
+    await prisma.class.update({
+      where: { id },
+      data: { active: false },
     });
 
     return res.status(200).json({ message: "Clase eliminada correctamente" });
   } catch (error) {
     console.error("Error deleting class:", error);
-
     return res.status(500).json({ message: "Error al eliminar la clase" });
   }
 };

@@ -17,7 +17,7 @@ export const getSubjectById = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const subject = await prisma.subject.findUnique({
+    const subject = await prisma.subject.findFirst({
       where: { id, active: true },
     });
 
@@ -55,7 +55,7 @@ export const updateSubject = async (req, res) => {
     const id = Number(req.params.id);
     const { name, description } = req.body;
 
-    const existingSubject = await prisma.subject.findUnique({
+    const existingSubject = await prisma.subject.findFirst({
       where: { id, active: true },
     });
 
@@ -64,7 +64,7 @@ export const updateSubject = async (req, res) => {
     }
 
     const updatedSubject = await prisma.subject.update({
-      where: { id, active: true },
+      where: { id },
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
@@ -82,8 +82,8 @@ export const deleteSubject = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const existingSubject = await prisma.subject.findUnique({
-      where: { id },
+    const existingSubject = await prisma.subject.findFirst({
+      where: { id, active: true },
     });
 
     if (!existingSubject) {
@@ -95,10 +95,9 @@ export const deleteSubject = async (req, res) => {
       data: { active: false },
     });
 
-    return res.status(200).json({ message: "Materia eliminada exitosamente" });
+    return res.status(200).json({ message: "Materia eliminada correctamente" });
   } catch (error) {
     console.error("Error deleting subject:", error);
-
     return res.status(500).json({ message: "Error al eliminar la materia" });
   }
 };
