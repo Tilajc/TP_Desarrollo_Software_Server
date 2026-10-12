@@ -7,8 +7,13 @@ const cardInclude = {
 
 export const getCards = async (req, res) => {
   try {
+    const { topicId } = req.query;
+
     const cards = await prisma.card.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(topicId && { topicId: Number(topicId) }),
+      },
       include: cardInclude,
     });
 
