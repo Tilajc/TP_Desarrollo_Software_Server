@@ -7,8 +7,15 @@ import subjectRoutes from "./subject.js";
 import summaryRoutes from "./summary.js";
 import topicRoutes from "./topic.js";
 import userRoutes from "./user.js";
+import authRoutes from "./auth.js";
+import { authenticate } from "../middlewares/auth.js";
 
 const router = Router();
+
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
+
+router.use(authenticate);
 
 router.use("/cards", cardRoutes);
 router.use("/classes", classRoutes);
@@ -17,6 +24,5 @@ router.use("/hints", hintRoutes);
 router.use("/subjects", subjectRoutes);
 router.use("/summaries", summaryRoutes);
 router.use("/topics", topicRoutes);
-router.use("/users", userRoutes);
 
 export default router;

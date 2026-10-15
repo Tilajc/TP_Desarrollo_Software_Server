@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import bcrypt from "bcryptjs";
 
 const userSelect = {
   id: true,
@@ -60,7 +61,7 @@ export const createUser = async (req, res) => {
         name,
         lastName,
         email,
-        password,
+        password: await bcrypt.hash(password, 10),
         docket,
         role,
       },
@@ -103,7 +104,9 @@ export const updateUser = async (req, res) => {
         ...(name !== undefined && { name }),
         ...(lastName !== undefined && { lastName }),
         ...(email !== undefined && { email }),
-        ...(password !== undefined && { password }),
+        ...(password !== undefined && {
+          password: await bcrypt.hash(password, 10),
+        }),
         ...(docket !== undefined && { docket }),
         ...(role !== undefined && { role }),
       },

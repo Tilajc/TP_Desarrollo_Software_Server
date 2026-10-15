@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import prisma from "../lib/prisma.js";
+import bcrypt from "bcryptjs";
 
 async function main() {
   console.log("Seeding...");
@@ -22,7 +23,7 @@ async function main() {
       name: "Admin",
       lastName: "Sistema",
       email: "admin@escuela.com",
-      password: "password123",
+      password: await bcrypt.hash("pass1234", 10),
       role: Role.ADMIN,
       docket: "ADM-001",
     },
@@ -33,7 +34,7 @@ async function main() {
       name: "Carlos",
       lastName: "Gómez",
       email: "carlos.gomez@escuela.com",
-      password: "password123",
+      password: await bcrypt.hash("pass1234", 10),
       role: Role.TEACHER,
       docket: "DOC-101",
     },
@@ -44,7 +45,7 @@ async function main() {
       name: "Juan",
       lastName: "Pérez",
       email: "juan.perez@miemail.com",
-      password: "password123",
+      password: await bcrypt.hash("pass1234", 10),
       role: Role.STUDENT,
       docket: "ALU-501",
     },
@@ -55,7 +56,7 @@ async function main() {
       name: "María",
       lastName: "López",
       email: "maria.lopez@miemail.com",
-      password: "password123",
+      password: await bcrypt.hash("pass1234", 10),
       role: Role.STUDENT,
       docket: "ALU-502",
     },
