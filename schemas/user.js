@@ -44,11 +44,14 @@ export const createUserSchema = z.object({
     .optional()
     .nullable(),
 
-  role: z.enum(["ADMIN", "TEACHER", "STUDENT"], {
-    errorMap: () => ({
-      message: "El rol debe ser ADMIN, TEACHER o STUDENT",
-    }),
-  }),
+  role: z
+    .enum(["ADMIN", "TEACHER", "STUDENT"], {
+      errorMap: () => ({
+        message: "El rol debe ser ADMIN, TEACHER o STUDENT",
+      }),
+    })
+    .optional()
+    .nullable(),
 });
 
 export const updateUserSchema = createUserSchema.partial();

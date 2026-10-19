@@ -143,3 +143,54 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: "Error al eliminar el usuario" });
   }
 };
+
+export const registerUser = async (req, res) => {
+  try {
+    const { name, lastName, email, password, docket } = req.body;
+
+    const emailInUse = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (emailInUse) {
+      return res.status(409).json({ message: "El email ya está registrado" });
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        lastName,
+        email,
+        password: await bcrypt.hash(password, 10),
+        docket,
+      },
+      select: userSelect,
+    });
+
+    return res.status(201).json(newUser);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return res.status(500).json({ message: "Error al crear el usuario" });
+  }
+};
+
+export const editProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, lastName } = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(lastName !== undefined && { lastName }),
+      },
+      select: userSelect,
+    });
+
+    return res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return res.status(500).json({ message: "Error al actualizar el perfil" });
+  }
+};
