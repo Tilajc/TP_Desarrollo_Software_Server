@@ -10,8 +10,8 @@ async function main() {
   await prisma.card.deleteMany();
   await prisma.summary.deleteMany();
   await prisma.topic.deleteMany();
-  await prisma.classSubscription.deleteMany();
-  await prisma.class.deleteMany();
+  await prisma.courseSubscription.deleteMany();
+  await prisma.course.deleteMany();
   await prisma.subject.deleteMany();
   await prisma.user.deleteMany();
 
@@ -22,8 +22,8 @@ async function main() {
     data: {
       name: "Admin",
       lastName: "Sistema",
-      email: "admin@escuela.com",
-      password: await bcrypt.hash("pass1234", 10),
+      email: "admin@gmail.com",
+      password: await bcrypt.hash("pass12", 10),
       role: Role.ADMIN,
       docket: "ADM-001",
     },
@@ -33,8 +33,8 @@ async function main() {
     data: {
       name: "Carlos",
       lastName: "Gómez",
-      email: "carlos.gomez@escuela.com",
-      password: await bcrypt.hash("pass1234", 10),
+      email: "carlos.gomez@gmail.com",
+      password: await bcrypt.hash("pass12", 10),
       role: Role.TEACHER,
       docket: "DOC-101",
     },
@@ -44,8 +44,8 @@ async function main() {
     data: {
       name: "Juan",
       lastName: "Pérez",
-      email: "juan.perez@miemail.com",
-      password: await bcrypt.hash("pass1234", 10),
+      email: "juan.perez@gmail.com",
+      password: await bcrypt.hash("pass12", 10),
       role: Role.STUDENT,
       docket: "ALU-501",
     },
@@ -55,8 +55,8 @@ async function main() {
     data: {
       name: "María",
       lastName: "López",
-      email: "maria.lopez@miemail.com",
-      password: await bcrypt.hash("pass1234", 10),
+      email: "maria.lopez@gmail.com",
+      password: await bcrypt.hash("pass12", 10),
       role: Role.STUDENT,
       docket: "ALU-502",
     },
@@ -81,8 +81,8 @@ async function main() {
 
   console.log("Subjects created");
 
-  // 4. Create Classes
-  const Class1 = await prisma.class.create({
+  // 4. Create Courses
+  const Course1 = await prisma.course.create({
     data: {
       year: 2026,
       teacherId: teacher1.id,
@@ -90,18 +90,18 @@ async function main() {
     },
   });
 
-  console.log("Classes created");
+  console.log("Courses created");
 
   // 5. Create Student Enrollments
-  await prisma.classSubscription.createMany({
+  await prisma.courseSubscription.createMany({
     data: [
       {
-        classId: Class1.id,
+        courseId: Course1.id,
         studentId: student1.id,
         status: "CURSANDO",
       },
       {
-        classId: Class1.id,
+        courseId: Course1.id,
         studentId: student2.id,
         status: "CURSANDO",
       },

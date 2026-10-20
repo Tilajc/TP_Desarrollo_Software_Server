@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createClassSchema = z.object({
+export const createCourseSchema = z.object({
   year: z
     .number({
       invalid_type_error: "El año debe ser un número",
@@ -26,4 +26,4 @@ export const createClassSchema = z.object({
     .positive("El subjectId debe ser mayor a 0"),
 });
 
-export const updateClassSchema = createClassSchema.partial();
+export const updateCourseSchema = createCourseSchema.partial();

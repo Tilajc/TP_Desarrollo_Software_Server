@@ -1,6 +1,6 @@
 import prisma from "../lib/prisma.js";
 
-const classInclude = {
+const courseInclude = {
   teacher: {
     select: {
       id: true,
@@ -13,44 +13,44 @@ const classInclude = {
   subject: true,
 };
 
-export const getClasses = async (req, res) => {
+export const getCourses = async (req, res) => {
   try {
-    const classes = await prisma.class.findMany({
+    const courses = await prisma.course.findMany({
       where: { active: true },
-      include: classInclude,
+      include: courseInclude,
     });
 
-    return res.status(200).json(classes);
+    return res.status(200).json(courses);
   } catch (error) {
-    console.error("Error fetching classes:", error);
-    return res.status(500).json({ message: "Error al obtener las clases" });
+    console.error("Error fetching courses:", error);
+    return res.status(500).json({ message: "Error al obtener los cursos" });
   }
 };
 
-export const getClassById = async (req, res) => {
+export const getCourseById = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const classItem = await prisma.class.findFirst({
+    const courseItem = await prisma.course.findFirst({
       where: { id, active: true },
       include: {
-        ...classInclude,
-        classSubscriptions: { where: { active: true } },
+        ...courseInclude,
+        courseSubscriptions: { where: { active: true } },
       },
     });
 
-    if (!classItem) {
-      return res.status(404).json({ message: "Clase no encontrada" });
+    if (!courseItem) {
+      return res.status(404).json({ message: "Curso no encontrado" });
     }
 
-    return res.status(200).json(classItem);
+    return res.status(200).json(courseItem);
   } catch (error) {
-    console.error("Error fetching class:", error);
-    return res.status(500).json({ message: "Error al obtener la clase" });
+    console.error("Error fetching course:", error);
+    return res.status(500).json({ message: "Error al obtener el curso" });
   }
 };
 
-export const createClass = async (req, res) => {
+export const createCourse = async (req, res) => {
   try {
     const { year, teacherId, subjectId } = req.body;
 
@@ -74,33 +74,33 @@ export const createClass = async (req, res) => {
       });
     }
 
-    const newClass = await prisma.class.create({
+    const newCourse = await prisma.course.create({
       data: {
         year,
         teacherId,
         subjectId,
       },
-      include: classInclude,
+      include: courseInclude,
     });
 
-    return res.status(201).json(newClass);
+    return res.status(201).json(newCourse);
   } catch (error) {
-    console.error("Error creating class:", error);
-    return res.status(500).json({ message: "Error al crear la clase" });
+    console.error("Error creating course:", error);
+    return res.status(500).json({ message: "Error al crear el curso" });
   }
 };
 
-export const updateClass = async (req, res) => {
+export const updateCourse = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { year, teacherId, subjectId } = req.body;
 
-    const existingClass = await prisma.class.findFirst({
+    const existingCourse = await prisma.course.findFirst({
       where: { id, active: true },
     });
 
-    if (!existingClass) {
-      return res.status(404).json({ message: "Clase no encontrada" });
+    if (!existingCourse) {
+      return res.status(404).json({ message: "Curso no encontrado" });
     }
 
     if (teacherId !== undefined) {
@@ -127,43 +127,43 @@ export const updateClass = async (req, res) => {
       }
     }
 
-    const updatedClass = await prisma.class.update({
+    const updatedCourse = await prisma.course.update({
       where: { id },
       data: {
         ...(year !== undefined && { year }),
         ...(teacherId !== undefined && { teacherId }),
         ...(subjectId !== undefined && { subjectId }),
       },
-      include: classInclude,
+      include: courseInclude,
     });
 
-    return res.status(200).json(updatedClass);
+    return res.status(200).json(updatedCourse);
   } catch (error) {
-    console.error("Error updating class:", error);
-    return res.status(500).json({ message: "Error al actualizar la clase" });
+    console.error("Error updating course:", error);
+    return res.status(500).json({ message: "Error al actualizar el curso" });
   }
 };
 
-export const deleteClass = async (req, res) => {
+export const deleteCourse = async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const existingClass = await prisma.class.findFirst({
+    const existingCourse = await prisma.course.findFirst({
       where: { id, active: true },
     });
 
-    if (!existingClass) {
-      return res.status(404).json({ message: "Clase no encontrada" });
+    if (!existingCourse) {
+      return res.status(404).json({ message: "Curso no encontrado" });
     }
 
-    await prisma.class.update({
+    await prisma.course.update({
       where: { id },
       data: { active: false },
     });
 
-    return res.status(200).json({ message: "Clase eliminada correctamente" });
+    return res.status(200).json({ message: "Curso eliminado correctamente" });
   } catch (error) {
-    console.error("Error deleting class:", error);
-    return res.status(500).json({ message: "Error al eliminar la clase" });
+    console.error("Error deleting course:", error);
+    return res.status(500).json({ message: "Error al eliminar el curso" });
   }
 };

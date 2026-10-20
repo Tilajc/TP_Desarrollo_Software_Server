@@ -1,7 +1,7 @@
 import { Router } from "express";
 import cardRoutes from "./card.js";
-import classRoutes from "./class.js";
-import classSubscriptionRoutes from "./classSubscription.js";
+import courseRoutes from "./course.js";
+import courseSubscriptionRoutes from "./courseSubscription.js";
 import hintRoutes from "./hint.js";
 import subjectRoutes from "./subject.js";
 import summaryRoutes from "./summary.js";
@@ -18,8 +18,8 @@ router.use("/users", userRoutes);
 router.use(authenticate);
 
 router.use("/cards", cardRoutes);
-router.use("/classes", classRoutes);
-router.use("/class-subscriptions", classSubscriptionRoutes);
+router.use("/courses", courseRoutes);
+router.use("/course-subscriptions", courseSubscriptionRoutes);
 router.use("/hints", hintRoutes);
 router.use("/subjects", subjectRoutes);
 router.use("/summaries", summaryRoutes);
