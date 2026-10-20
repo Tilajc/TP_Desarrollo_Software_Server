@@ -15,7 +15,7 @@ const router = Router();
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 
-router.use(authenticate);
+// router.use(authenticate);
 
 router.use("/cards", cardRoutes);
 router.use("/courses", courseRoutes);

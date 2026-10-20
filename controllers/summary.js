@@ -1,9 +1,19 @@
 import prisma from "../lib/prisma.js";
 
+const summaryInclude = {
+  topic: { include: { subject: true } },
+};
+
 export const getSummaries = async (req, res) => {
   try {
+    const { topicId } = req.query;
+
     const summaries = await prisma.summary.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(topicId && { topicId: Number(topicId) }),
+      },
+      include: summaryInclude,
     });
 
     return res.status(200).json(summaries);
