@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const createClassSchema = z.object({
-  year: z
+export const createCourseSchema = z.object({
+  year: z.coerce
     .number({
       invalid_type_error: "El año debe ser un número",
     })
@@ -10,14 +10,14 @@ export const createClassSchema = z.object({
     .max(2100, "El año debe ser menor o igual a 2100")
     .optional()
     .nullable(),
-  teacherId: z
+  teacherId: z.coerce
     .number({
       required_error: "El teacherId es obligatorio",
       invalid_type_error: "El teacherId debe ser un número",
     })
     .int("El teacherId debe ser un número entero")
     .positive("El teacherId debe ser mayor a 0"),
-  subjectId: z
+  subjectId: z.coerce
     .number({
       required_error: "El subjectId es obligatorio",
       invalid_type_error: "El subjectId debe ser un número",
@@ -26,4 +26,4 @@ export const createClassSchema = z.object({
     .positive("El subjectId debe ser mayor a 0"),
 });
 
-export const updateClassSchema = createClassSchema.partial();
+export const updateCourseSchema = createCourseSchema.partial();

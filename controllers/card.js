@@ -1,17 +1,20 @@
 import prisma from "../lib/prisma.js";
 
+const cardInclude = {
+  topic: { include: { subject: true } },
+  hints: { where: { active: true } },
+};
+
 export const getCards = async (req, res) => {
   try {
+    const { topicId } = req.query;
+
     const cards = await prisma.card.findMany({
-      where: { active: true },
-      include: {
-        topic: {
-          include: {
-            subject: true,
-          },
-        },
-        hints: true,
+      where: {
+        active: true,
+        ...(topicId && { topicId: Number(topicId) }),
       },
+      include: cardInclude,
     });
 
     return res.status(200).json(cards);
@@ -27,14 +30,7 @@ export const getCardById = async (req, res) => {
 
     const card = await prisma.card.findFirst({
       where: { id, active: true },
-      include: {
-        topic: {
-          include: {
-            subject: true,
-          },
-        },
-        hints: true,
-      },
+      include: cardInclude,
     });
 
     if (!card) {
@@ -51,10 +47,9 @@ export const getCardById = async (req, res) => {
 export const createCard = async (req, res) => {
   try {
     const { question, answer, topicId } = req.body;
-    const parsedTopicId = Number(topicId);
 
     const topicExists = await prisma.topic.findFirst({
-      where: { id: parsedTopicId, active: true },
+      where: { id: topicId, active: true },
     });
 
     if (!topicExists) {
@@ -67,15 +62,9 @@ export const createCard = async (req, res) => {
       data: {
         question,
         answer,
-        topicId: parsedTopicId,
+        topicId,
       },
-      include: {
-        topic: {
-          include: {
-            subject: true,
-          },
-        },
-      },
+      include: cardInclude,
     });
 
     return res.status(201).json(newCard);
@@ -88,7 +77,7 @@ export const createCard = async (req, res) => {
 export const updateCard = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { question, answer, topicId, active } = req.body;
+    const { question, answer, topicId } = req.body;
 
     const existingCard = await prisma.card.findFirst({
       where: { id, active: true },
@@ -98,17 +87,16 @@ export const updateCard = async (req, res) => {
       return res.status(404).json({ message: "Tarjeta no encontrada" });
     }
 
-    const parsedTopicId = Number(topicId);
-
-    const topicExists = await prisma.topic.findFirst({
-      where: { id: parsedTopicId, active: true },
-    });
-
-    if (!topicExists) {
-      return res.status(404).json({
-        message:
-          "El tema especificado para reasignar no existe o no está activo",
+    if (topicId !== undefined) {
+      const topicExists = await prisma.topic.findFirst({
+        where: { id: topicId, active: true },
       });
+
+      if (!topicExists) {
+        return res.status(404).json({
+          message: "El tema especificado no existe o no está activo",
+        });
+      }
     }
 
     const updatedCard = await prisma.card.update({
@@ -116,16 +104,9 @@ export const updateCard = async (req, res) => {
       data: {
         ...(question !== undefined && { question }),
         ...(answer !== undefined && { answer }),
-        ...(parsedTopicId !== undefined && { topicId: parsedTopicId }),
-        ...(active !== undefined && { active }),
+        ...(topicId !== undefined && { topicId }),
       },
-      include: {
-        topic: {
-          include: {
-            subject: true,
-          },
-        },
-      },
+      include: cardInclude,
     });
 
     return res.status(200).json(updatedCard);
@@ -152,7 +133,7 @@ export const deleteCard = async (req, res) => {
       data: { active: false },
     });
 
-    return res.status(200).json({ message: "Tarjeta eliminada exitosamente" });
+    return res.status(200).json({ message: "Tarjeta eliminada correctamente" });
   } catch (error) {
     console.error("Error deleting card:", error);
     return res.status(500).json({ message: "Error al eliminar la tarjeta" });

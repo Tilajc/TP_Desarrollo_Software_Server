@@ -29,25 +29,25 @@ CREATE TABLE "Subject" (
 );
 
 -- CreateTable
-CREATE TABLE "Class" (
+CREATE TABLE "Course" (
     "id" SERIAL NOT NULL,
     "year" INTEGER,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "teacherId" INTEGER NOT NULL,
     "subjectId" INTEGER NOT NULL,
 
-    CONSTRAINT "Class_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Course_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ClassSubscription" (
+CREATE TABLE "CourseSubscription" (
     "id" SERIAL NOT NULL,
     "status" "InscriptionStatus" NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
-    "classId" INTEGER NOT NULL,
+    "courseId" INTEGER NOT NULL,
     "studentId" INTEGER NOT NULL,
 
-    CONSTRAINT "ClassSubscription_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "CourseSubscription_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -96,19 +96,19 @@ CREATE TABLE "Hint" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ClassSubscription_studentId_classId_key" ON "ClassSubscription"("studentId", "classId");
+CREATE UNIQUE INDEX "CourseSubscription_studentId_courseId_key" ON "CourseSubscription"("studentId", "courseId");
 
 -- AddForeignKey
-ALTER TABLE "Class" ADD CONSTRAINT "Class_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Course" ADD CONSTRAINT "Course_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Class" ADD CONSTRAINT "Class_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Course" ADD CONSTRAINT "Course_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ClassSubscription" ADD CONSTRAINT "ClassSubscription_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "CourseSubscription" ADD CONSTRAINT "CourseSubscription_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ClassSubscription" ADD CONSTRAINT "ClassSubscription_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "CourseSubscription" ADD CONSTRAINT "CourseSubscription_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Topic" ADD CONSTRAINT "Topic_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

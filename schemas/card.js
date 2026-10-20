@@ -16,7 +16,7 @@ export const createCardSchema = z.object({
     })
     .trim()
     .min(1, "La respuesta es obligatoria"),
-  topicId: z
+  topicId: z.coerce
     .number({
       required_error: "El topicId es obligatorio",
       invalid_type_error: "El topicId debe ser un número",

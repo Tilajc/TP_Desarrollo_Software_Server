@@ -28,8 +28,8 @@ model User {
   role     Role    @default(STUDENT)
   active   Boolean @default(true)
 
-  teachingClasses Class[]
-  enrollments     ClassSubscription[]
+  teachingCourses Course[]
+  enrollments     CourseSubscription[]
 }
 
 model Subject {
@@ -38,11 +38,11 @@ model Subject {
   description String?
   active      Boolean @default(true)
 
-  classes Class[]
+  courses Course[]
   topics  Topic[]
 }
 
-model Class {
+model Course {
   id     Int     @id @default(autoincrement())
   year   Int?
   active Boolean @default(true)
@@ -53,21 +53,21 @@ model Class {
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id])
 
-  classSubscriptions ClassSubscription[]
+  courseSubscriptions CourseSubscription[]
 }
 
-model ClassSubscription {
+model CourseSubscription {
   id     Int               @id @default(autoincrement())
   status InscriptionStatus
   active Boolean           @default(true)
 
-  classId Int
-  class   Class @relation(fields: [classId], references: [id])
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
 
   studentId Int
   student   User @relation(fields: [studentId], references: [id])
 
-  @@unique([studentId, classId])
+  @@unique([studentId, courseId])
 }
 
 model Topic {
