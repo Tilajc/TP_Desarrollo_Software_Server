@@ -10,7 +10,7 @@ export const createTopicSchema = z.object({
     .min(1, "El nombre es obligatorio")
     .min(3, "El nombre debe tener al menos 3 caracteres")
     .max(50, "El nombre no puede superar los 50 caracteres"),
-  subjectId: z
+  subjectId: z.coerce
     .number({
       required_error: "El subjectId es obligatorio",
       invalid_type_error: "El subjectId debe ser un número",

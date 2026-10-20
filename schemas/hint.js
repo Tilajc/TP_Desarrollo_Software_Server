@@ -9,7 +9,7 @@ export const createHintSchema = z.object({
     .trim()
     .min(1, "El contenido es obligatorio")
     .min(3, "El contenido debe tener al menos 3 caracteres"),
-  cardId: z
+  cardId: z.coerce
     .number({
       required_error: "El cardId es obligatorio",
       invalid_type_error: "El cardId debe ser un número",

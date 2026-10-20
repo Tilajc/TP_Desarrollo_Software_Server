@@ -17,7 +17,7 @@ export const createSummarySchema = z.object({
     })
     .trim()
     .min(1, "El contenido es obligatorio"),
-  topicId: z
+  topicId: z.coerce
     .number({
       required_error: "El topicId es obligatorio",
       invalid_type_error: "El topicId debe ser un número",
