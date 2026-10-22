@@ -1,7 +1,9 @@
 import prisma from "../lib/prisma.js";
+import { authorSelect } from "../lib/access.js";
 
 const summaryInclude = {
   topic: { include: { subject: true } },
+  author: { select: authorSelect },
 };
 
 export const getSummaries = async (req, res) => {
@@ -61,6 +63,7 @@ export const createSummary = async (req, res) => {
         title,
         content,
         topicId,
+        authorId: req.user.id,
       },
     });
 

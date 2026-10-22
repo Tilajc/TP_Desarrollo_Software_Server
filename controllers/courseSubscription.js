@@ -2,13 +2,12 @@ import prisma from "../lib/prisma.js";
 
 const subscriptionInclude = {
   course: true,
-  student: {
+  subscriber: {
     select: {
       id: true,
       name: true,
       lastName: true,
       email: true,
-      docket: true,
     },
   },
 };
@@ -51,7 +50,8 @@ export const getCourseSubscriptionById = async (req, res) => {
 
 export const createCourseSubscription = async (req, res) => {
   try {
-    const { status, courseId, studentId } = req.body;
+    const { courseId } = req.body;
+    const subscriberId = req.body.subscriberId ?? req.user.id;
 
     const courseExists = await prisma.course.findFirst({
       where: { id: courseId, active: true },
@@ -63,21 +63,20 @@ export const createCourseSubscription = async (req, res) => {
       });
     }
 
-    const studentExists = await prisma.user.findFirst({
-      where: { id: studentId, role: "STUDENT", active: true },
+    const subscriberExists = await prisma.user.findFirst({
+      where: { id: subscriberId, active: true },
     });
 
-    if (!studentExists) {
+    if (!subscriberExists) {
       return res.status(404).json({
-        message: "El alumno especificado no existe o no está activo",
+        message: "El usuario especificado no existe o no está activo",
       });
     }
 
     const newSubscription = await prisma.courseSubscription.create({
       data: {
-        status,
         courseId,
-        studentId,
+        subscriberId,
       },
       include: subscriptionInclude,
     });
@@ -87,7 +86,7 @@ export const createCourseSubscription = async (req, res) => {
     if (error.code === "P2002") {
       return res
         .status(409)
-        .json({ message: "El alumno ya está inscripto en este curso" });
+        .json({ message: "El usuario ya está inscripto en este curso" });
     }
 
     console.error("Error creating course subscription:", error);
@@ -98,7 +97,7 @@ export const createCourseSubscription = async (req, res) => {
 export const updateCourseSubscription = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { status, courseId, studentId } = req.body;
+    const { courseId, subscriberId } = req.body;
 
     const existingSubscription = await prisma.courseSubscription.findFirst({
       where: { id, active: true },
@@ -120,14 +119,14 @@ export const updateCourseSubscription = async (req, res) => {
       }
     }
 
-    if (studentId !== undefined) {
-      const studentExists = await prisma.user.findFirst({
-        where: { id: studentId, role: "STUDENT", active: true },
+    if (subscriberId !== undefined) {
+      const subscriberExists = await prisma.user.findFirst({
+        where: { id: subscriberId, active: true },
       });
 
-      if (!studentExists) {
+      if (!subscriberExists) {
         return res.status(404).json({
-          message: "El alumno especificado no existe o no está activo",
+          message: "El usuario especificado no existe o no está activo",
         });
       }
     }
@@ -135,9 +134,8 @@ export const updateCourseSubscription = async (req, res) => {
     const updatedSubscription = await prisma.courseSubscription.update({
       where: { id },
       data: {
-        ...(status !== undefined && { status }),
         ...(courseId !== undefined && { courseId }),
-        ...(studentId !== undefined && { studentId }),
+        ...(subscriberId !== undefined && { subscriberId }),
       },
       include: subscriptionInclude,
     });
@@ -147,7 +145,7 @@ export const updateCourseSubscription = async (req, res) => {
     if (error.code === "P2002") {
       return res
         .status(409)
-        .json({ message: "El alumno ya está inscripto en este curso" });
+        .json({ message: "El usuario ya está inscripto en este curso" });
     }
 
     console.error("Error updating course subscription:", error);

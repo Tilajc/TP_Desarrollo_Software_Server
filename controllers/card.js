@@ -1,8 +1,10 @@
 import prisma from "../lib/prisma.js";
+import { authorSelect } from "../lib/access.js";
 
 const cardInclude = {
   topic: { include: { subject: true } },
   hints: { where: { active: true } },
+  author: { select: authorSelect },
 };
 
 export const getCards = async (req, res) => {
@@ -63,6 +65,7 @@ export const createCard = async (req, res) => {
         question,
         answer,
         topicId,
+        authorId: req.user.id,
       },
       include: cardInclude,
     });
