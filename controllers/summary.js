@@ -61,6 +61,7 @@ export const createSummary = async (req, res) => {
         title,
         content,
         topicId,
+        authorId: req.user.id,
       },
     });
 

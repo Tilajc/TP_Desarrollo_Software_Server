@@ -8,14 +8,7 @@ datasource db {
 
 enum Role {
   ADMIN
-  TEACHER
-  STUDENT
-}
-
-enum InscriptionStatus {
-  CURSANDO
-  FINALIZADO
-  ABANDONADO
+  USER
 }
 
 model User {
@@ -24,12 +17,15 @@ model User {
   lastName String
   email    String  @unique
   password String
-  docket   String?
-  role     Role    @default(STUDENT)
+  role     Role    @default(USER)
   active   Boolean @default(true)
 
-  teachingCourses Course[]
-  enrollments     CourseSubscription[]
+  courses             Course[]
+  courseSubscriptions CourseSubscription[]
+  subscriptions       UserSubscription[]   @relation("UserSubscriber")
+  subscribers         UserSubscription[]   @relation("UserSubscribed")
+  cards               Card[]
+  summaries           Summary[]
 }
 
 model Subject {
@@ -44,30 +40,43 @@ model Subject {
 
 model Course {
   id     Int     @id @default(autoincrement())
-  year   Int?
   active Boolean @default(true)
 
-  teacherId Int
-  teacher   User @relation(fields: [teacherId], references: [id])
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id])
 
   courseSubscriptions CourseSubscription[]
+
+  @@unique([authorId, subjectId])
 }
 
 model CourseSubscription {
-  id     Int               @id @default(autoincrement())
-  status InscriptionStatus
-  active Boolean           @default(true)
+  id     Int     @id @default(autoincrement())
+  active Boolean @default(true)
 
   courseId Int
   course   Course @relation(fields: [courseId], references: [id])
 
-  studentId Int
-  student   User @relation(fields: [studentId], references: [id])
+  subscriberId Int
+  subscriber   User @relation(fields: [subscriberId], references: [id])
 
-  @@unique([studentId, courseId])
+  @@unique([subscriberId, courseId])
+}
+
+model UserSubscription {
+  id     Int     @id @default(autoincrement())
+  active Boolean @default(true)
+
+  subscriberId Int
+  subscriber   User @relation("UserSubscriber", fields: [subscriberId], references: [id])
+
+  authorId Int
+  author   User @relation("UserSubscribed", fields: [authorId], references: [id])
+
+  @@unique([subscriberId, authorId])
 }
 
 model Topic {
@@ -83,13 +92,17 @@ model Topic {
 }
 
 model Summary {
-  id      Int     @id @default(autoincrement())
+  id      Int      @id @default(autoincrement())
   title   String
   content String
-  active  Boolean @default(true)
+  date    DateTime @default(now())
+  active  Boolean  @default(true)
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 }
 
 model Card {
@@ -100,6 +113,9 @@ model Card {
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
   hints Hint[]
 }

@@ -1,11 +1,6 @@
 import { z } from "zod";
 
 export const createCourseSubscriptionSchema = z.object({
-  status: z.enum(["CURSANDO", "FINALIZADO", "ABANDONADO"], {
-    errorMap: () => ({
-      message: "El estado debe ser CURSANDO, FINALIZADO o ABANDONADO",
-    }),
-  }),
   courseId: z.coerce
     .number({
       required_error: "El courseId es obligatorio",
@@ -13,13 +8,13 @@ export const createCourseSubscriptionSchema = z.object({
     })
     .int("El courseId debe ser un número entero")
     .positive("El courseId debe ser un número positivo"),
-  studentId: z.coerce
+  subscriberId: z.coerce
     .number({
-      required_error: "El studentId es obligatorio",
-      invalid_type_error: "El studentId debe ser un número",
+      invalid_type_error: "El subscriberId debe ser un número",
     })
-    .int("El studentId debe ser un número entero")
-    .positive("El studentId debe ser un número positivo"),
+    .int("El subscriberId debe ser un número entero")
+    .positive("El subscriberId debe ser un número positivo")
+    .optional(),
 });
 
 export const updateCourseSubscriptionSchema =

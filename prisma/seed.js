@@ -25,40 +25,36 @@ async function main() {
       email: "admin@gmail.com",
       password: await bcrypt.hash("pass12", 10),
       role: Role.ADMIN,
-      docket: "ADM-001",
     },
   });
 
-  const teacher1 = await prisma.user.create({
+  const user1 = await prisma.user.create({
     data: {
       name: "Carlos",
       lastName: "Gómez",
       email: "carlos.gomez@gmail.com",
       password: await bcrypt.hash("pass12", 10),
-      role: Role.TEACHER,
-      docket: "DOC-101",
+      role: Role.USER,
     },
   });
 
-  const student1 = await prisma.user.create({
+  const user2 = await prisma.user.create({
     data: {
       name: "Juan",
       lastName: "Pérez",
       email: "juan.perez@gmail.com",
       password: await bcrypt.hash("pass12", 10),
-      role: Role.STUDENT,
-      docket: "ALU-501",
+      role: Role.USER,
     },
   });
 
-  const student2 = await prisma.user.create({
+  const user3 = await prisma.user.create({
     data: {
       name: "María",
       lastName: "López",
       email: "maria.lopez@gmail.com",
       password: await bcrypt.hash("pass12", 10),
-      role: Role.STUDENT,
-      docket: "ALU-502",
+      role: Role.USER,
     },
   });
 
@@ -81,36 +77,17 @@ async function main() {
 
   console.log("Subjects created");
 
-  // 4. Create Courses
+  // 4. Create Courses (un curso = autor + materia)
   const Course1 = await prisma.course.create({
     data: {
-      year: 2026,
-      teacherId: teacher1.id,
+      authorId: user1.id,
       subjectId: Subject1.id,
     },
   });
 
   console.log("Courses created");
 
-  // 5. Create Student Enrollments
-  await prisma.courseSubscription.createMany({
-    data: [
-      {
-        courseId: Course1.id,
-        studentId: student1.id,
-        status: "CURSANDO",
-      },
-      {
-        courseId: Course1.id,
-        studentId: student2.id,
-        status: "CURSANDO",
-      },
-    ],
-  });
-
-  console.log("Enrollments created");
-
-  // 6. Create Topics, Summaries, and Cards
+  // 5. Create Topics, Summaries, and Cards
   const topicDerivatives = await prisma.topic.create({
     data: {
       name: "Derivadas y Funciones",
@@ -123,6 +100,7 @@ async function main() {
       title: "Regla de la Cadena y Derivación",
       content: "Explicación detallada sobre cómo derivar funciones compuestas.",
       topicId: topicDerivatives.id,
+      authorId: user1.id,
     },
   });
 
@@ -131,6 +109,7 @@ async function main() {
       question: "¿Cuál es la derivada de x^2?",
       answer: "2x",
       topicId: topicDerivatives.id,
+      authorId: user1.id,
     },
   });
 

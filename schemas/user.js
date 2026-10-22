@@ -36,18 +36,10 @@ export const createUserSchema = z.object({
     })
     .min(6, "La contraseña debe tener al menos 6 caracteres"),
 
-  docket: z
-    .string({
-      invalid_type_error: "El legajo debe ser un texto",
-    })
-    .trim()
-    .optional()
-    .nullable(),
-
   role: z
-    .enum(["ADMIN", "TEACHER", "STUDENT"], {
+    .enum(["ADMIN", "USER"], {
       errorMap: () => ({
-        message: "El rol debe ser ADMIN, TEACHER o STUDENT",
+        message: "El rol debe ser ADMIN o USER",
       }),
     })
     .optional()

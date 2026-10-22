@@ -6,7 +6,6 @@ const userSelect = {
   name: true,
   lastName: true,
   email: true,
-  docket: true,
   role: true,
 };
 
@@ -46,7 +45,7 @@ export const getUserById = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { name, lastName, email, password, docket, role } = req.body;
+    const { name, lastName, email, password, role } = req.body;
 
     const emailInUse = await prisma.user.findUnique({
       where: { email },
@@ -62,7 +61,6 @@ export const createUser = async (req, res) => {
         lastName,
         email,
         password: await bcrypt.hash(password, 10),
-        docket,
         role,
       },
       select: userSelect,
@@ -78,7 +76,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { name, lastName, email, password, docket, role } = req.body;
+    const { name, lastName, email, password, role } = req.body;
 
     const existingUser = await prisma.user.findFirst({
       where: { id, active: true },
@@ -107,7 +105,6 @@ export const updateUser = async (req, res) => {
         ...(password !== undefined && {
           password: await bcrypt.hash(password, 10),
         }),
-        ...(docket !== undefined && { docket }),
         ...(role !== undefined && { role }),
       },
       select: userSelect,
@@ -146,7 +143,7 @@ export const deleteUser = async (req, res) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, lastName, email, password, docket } = req.body;
+    const { name, lastName, email, password } = req.body;
 
     const emailInUse = await prisma.user.findUnique({
       where: { email },
@@ -162,7 +159,6 @@ export const registerUser = async (req, res) => {
         lastName,
         email,
         password: await bcrypt.hash(password, 10),
-        docket,
       },
       select: userSelect,
     });
