@@ -1,9 +1,21 @@
 import prisma from "../lib/prisma.js";
+import { authorSelect } from "../lib/access.js";
+
+const summaryInclude = {
+  topic: { include: { subject: true } },
+  author: { select: authorSelect },
+};
 
 export const getSummaries = async (req, res) => {
   try {
+    const { topicId } = req.query;
+
     const summaries = await prisma.summary.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(topicId && { topicId: Number(topicId) }),
+      },
+      include: summaryInclude,
     });
 
     return res.status(200).json(summaries);
@@ -51,6 +63,7 @@ export const createSummary = async (req, res) => {
         title,
         content,
         topicId,
+        authorId: req.user.id,
       },
     });
 

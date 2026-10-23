@@ -1,7 +1,8 @@
 import prisma from "../lib/prisma.js";
+import { canManage, isAdmin } from "../lib/access.js";
 
 const courseInclude = {
-  teacher: {
+  author: {
     select: {
       id: true,
       name: true,
@@ -13,10 +14,21 @@ const courseInclude = {
   subject: true,
 };
 
+const forbidden = (res) =>
+  res
+    .status(403)
+    .json({ message: "No tenés permisos para realizar esta acción" });
+
 export const getCourses = async (req, res) => {
   try {
+    const { authorId, subjectId } = req.query;
+
     const courses = await prisma.course.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(authorId && { authorId: Number(authorId) }),
+        ...(subjectId && { subjectId: Number(subjectId) }),
+      },
       include: courseInclude,
     });
 
@@ -52,15 +64,20 @@ export const getCourseById = async (req, res) => {
 
 export const createCourse = async (req, res) => {
   try {
-    const { year, teacherId, subjectId } = req.body;
+    const { subjectId } = req.body;
+    const authorId = req.body.authorId ?? req.user.id;
 
-    const teacherExists = await prisma.user.findFirst({
-      where: { id: teacherId, role: "TEACHER", active: true },
+    if (authorId !== req.user.id && !isAdmin(req.user)) {
+      return forbidden(res);
+    }
+
+    const authorExists = await prisma.user.findFirst({
+      where: { id: authorId, active: true },
     });
 
-    if (!teacherExists) {
+    if (!authorExists) {
       return res.status(404).json({
-        message: "El profesor especificado no existe o no está activo",
+        message: "El autor especificado no existe o no está activo",
       });
     }
 
@@ -74,17 +91,35 @@ export const createCourse = async (req, res) => {
       });
     }
 
-    const newCourse = await prisma.course.create({
-      data: {
-        year,
-        teacherId,
-        subjectId,
-      },
-      include: courseInclude,
+    const existingCourse = await prisma.course.findUnique({
+      where: { authorId_subjectId: { authorId, subjectId } },
     });
 
-    return res.status(201).json(newCourse);
+    if (existingCourse?.active) {
+      return res.status(409).json({
+        message: "El autor ya tiene un curso para esta materia",
+      });
+    }
+
+    const course = existingCourse
+      ? await prisma.course.update({
+          where: { id: existingCourse.id },
+          data: { active: true },
+          include: courseInclude,
+        })
+      : await prisma.course.create({
+          data: { authorId, subjectId },
+          include: courseInclude,
+        });
+
+    return res.status(201).json(course);
   } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "El autor ya tiene un curso para esta materia",
+      });
+    }
+
     console.error("Error creating course:", error);
     return res.status(500).json({ message: "Error al crear el curso" });
   }
@@ -93,7 +128,7 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { year, teacherId, subjectId } = req.body;
+    const { authorId, subjectId } = req.body;
 
     const existingCourse = await prisma.course.findFirst({
       where: { id, active: true },
@@ -103,14 +138,26 @@ export const updateCourse = async (req, res) => {
       return res.status(404).json({ message: "Curso no encontrado" });
     }
 
-    if (teacherId !== undefined) {
-      const teacherExists = await prisma.user.findFirst({
-        where: { id: teacherId, role: "TEACHER", active: true },
+    if (!canManage(req.user, existingCourse.authorId)) {
+      return forbidden(res);
+    }
+
+    if (
+      authorId !== undefined &&
+      authorId !== existingCourse.authorId &&
+      !isAdmin(req.user)
+    ) {
+      return forbidden(res);
+    }
+
+    if (authorId !== undefined) {
+      const authorExists = await prisma.user.findFirst({
+        where: { id: authorId, active: true },
       });
 
-      if (!teacherExists) {
+      if (!authorExists) {
         return res.status(404).json({
-          message: "El profesor especificado no existe o no está activo",
+          message: "El autor especificado no existe o no está activo",
         });
       }
     }
@@ -130,8 +177,7 @@ export const updateCourse = async (req, res) => {
     const updatedCourse = await prisma.course.update({
       where: { id },
       data: {
-        ...(year !== undefined && { year }),
-        ...(teacherId !== undefined && { teacherId }),
+        ...(authorId !== undefined && { authorId }),
         ...(subjectId !== undefined && { subjectId }),
       },
       include: courseInclude,
@@ -139,6 +185,12 @@ export const updateCourse = async (req, res) => {
 
     return res.status(200).json(updatedCourse);
   } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "El autor ya tiene un curso para esta materia",
+      });
+    }
+
     console.error("Error updating course:", error);
     return res.status(500).json({ message: "Error al actualizar el curso" });
   }
@@ -154,6 +206,10 @@ export const deleteCourse = async (req, res) => {
 
     if (!existingCourse) {
       return res.status(404).json({ message: "Curso no encontrado" });
+    }
+
+    if (!canManage(req.user, existingCourse.authorId)) {
+      return forbidden(res);
     }
 
     await prisma.course.update({

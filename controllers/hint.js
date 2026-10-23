@@ -1,9 +1,16 @@
 import prisma from "../lib/prisma.js";
 
+const hintInclude = {
+  card: { include: { topic: true } },
+};
+
 export const getHints = async (req, res) => {
+  const { cardId } = req.query;
+
   try {
     const hints = await prisma.hint.findMany({
-      where: { active: true },
+      where: { active: true, ...(cardId && { cardId: Number(cardId) }) },
+      include: hintInclude,
     });
 
     return res.status(200).json(hints);
