@@ -1,5 +1,10 @@
 import prisma from "../lib/prisma.js";
-import { authorSelect } from "../lib/access.js";
+import {
+  accessibleContentWhere,
+  authorSelect,
+  canManage,
+  hasCourse,
+} from "../lib/access.js";
 
 const cardInclude = {
   topic: { include: { subject: true } },
@@ -7,14 +12,27 @@ const cardInclude = {
   author: { select: authorSelect },
 };
 
+const forbidden = (res) =>
+  res
+    .status(403)
+    .json({ message: "No tenés permisos para realizar esta acción" });
+
+const noCourse = (res) =>
+  res
+    .status(403)
+    .json({ message: "Primero hay que crear el curso de esta materia" });
+
 export const getCards = async (req, res) => {
   try {
-    const { topicId } = req.query;
+    const { topicId, authorId, subjectId } = req.query;
 
     const cards = await prisma.card.findMany({
       where: {
         active: true,
+        ...(await accessibleContentWhere(req.user)),
         ...(topicId && { topicId: Number(topicId) }),
+        ...(authorId && { authorId: Number(authorId) }),
+        ...(subjectId && { topic: { subjectId: Number(subjectId) } }),
       },
       include: cardInclude,
     });
@@ -31,7 +49,11 @@ export const getCardById = async (req, res) => {
     const id = Number(req.params.id);
 
     const card = await prisma.card.findFirst({
-      where: { id, active: true },
+      where: {
+        id,
+        active: true,
+        ...(await accessibleContentWhere(req.user)),
+      },
       include: cardInclude,
     });
 
@@ -58,6 +80,10 @@ export const createCard = async (req, res) => {
       return res.status(404).json({
         message: "El tema especificado no existe o no está activo",
       });
+    }
+
+    if (!(await hasCourse(req.user.id, topicExists.subjectId))) {
+      return noCourse(res);
     }
 
     const newCard = await prisma.card.create({
@@ -90,6 +116,10 @@ export const updateCard = async (req, res) => {
       return res.status(404).json({ message: "Tarjeta no encontrada" });
     }
 
+    if (!canManage(req.user, existingCard.authorId)) {
+      return forbidden(res);
+    }
+
     if (topicId !== undefined) {
       const topicExists = await prisma.topic.findFirst({
         where: { id: topicId, active: true },
@@ -99,6 +129,13 @@ export const updateCard = async (req, res) => {
         return res.status(404).json({
           message: "El tema especificado no existe o no está activo",
         });
+      }
+
+      if (
+        topicId !== existingCard.topicId &&
+        !(await hasCourse(existingCard.authorId, topicExists.subjectId))
+      ) {
+        return noCourse(res);
       }
     }
 
@@ -129,6 +166,10 @@ export const deleteCard = async (req, res) => {
 
     if (!existingCard) {
       return res.status(404).json({ message: "Tarjeta no encontrada" });
+    }
+
+    if (!canManage(req.user, existingCard.authorId)) {
+      return forbidden(res);
     }
 
     await prisma.card.update({

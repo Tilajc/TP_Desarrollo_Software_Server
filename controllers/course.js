@@ -1,16 +1,8 @@
 import prisma from "../lib/prisma.js";
-import { canManage, isAdmin } from "../lib/access.js";
+import { authorSelect, canManage, isAdmin } from "../lib/access.js";
 
 const courseInclude = {
-  author: {
-    select: {
-      id: true,
-      name: true,
-      lastName: true,
-      email: true,
-      role: true,
-    },
-  },
+  author: { select: authorSelect },
   subject: true,
 };
 
@@ -53,6 +45,10 @@ export const getCourseById = async (req, res) => {
 
     if (!courseItem) {
       return res.status(404).json({ message: "Curso no encontrado" });
+    }
+
+    if (!canManage(req.user, courseItem.authorId)) {
+      delete courseItem.courseSubscriptions;
     }
 
     return res.status(200).json(courseItem);
