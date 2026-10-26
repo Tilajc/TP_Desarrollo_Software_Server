@@ -1,16 +1,8 @@
 import prisma from "../lib/prisma.js";
-import { canManage, isAdmin } from "../lib/access.js";
+import { authorSelect, canManage, isAdmin } from "../lib/access.js";
 
 const courseInclude = {
-  author: {
-    select: {
-      id: true,
-      name: true,
-      lastName: true,
-      email: true,
-      role: true,
-    },
-  },
+  author: { select: authorSelect },
   subject: true,
 };
 
@@ -55,6 +47,10 @@ export const getCourseById = async (req, res) => {
       return res.status(404).json({ message: "Curso no encontrado" });
     }
 
+    if (!canManage(req.user, courseItem.authorId)) {
+      delete courseItem.courseSubscriptions;
+    }
+
     return res.status(200).json(courseItem);
   } catch (error) {
     console.error("Error fetching course:", error);
@@ -67,7 +63,6 @@ export const createCourse = async (req, res) => {
     const { subjectId } = req.body;
     const authorId = req.body.authorId ?? req.user.id;
 
-    // Solo el admin puede crear un curso a nombre de otro usuario
     if (authorId !== req.user.id && !isAdmin(req.user)) {
       return forbidden(res);
     }
@@ -143,7 +138,6 @@ export const updateCourse = async (req, res) => {
       return forbidden(res);
     }
 
-    // Reasignar el curso a otro autor es solo cosa del admin
     if (
       authorId !== undefined &&
       authorId !== existingCourse.authorId &&

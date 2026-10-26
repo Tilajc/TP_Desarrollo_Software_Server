@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { canManage, isAdmin } from "../lib/access.js";
 
 const subscriptionInclude = {
   course: true,
@@ -12,10 +13,23 @@ const subscriptionInclude = {
   },
 };
 
+const forbidden = (res) =>
+  res
+    .status(403)
+    .json({ message: "No tenés permisos para realizar esta acción" });
+
+const visibleTo = (user) => (isAdmin(user) ? {} : { subscriberId: user.id });
+
 export const getCourseSubscriptions = async (req, res) => {
   try {
+    const { courseId } = req.query;
+
     const subscriptions = await prisma.courseSubscription.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...visibleTo(req.user),
+        ...(courseId && { courseId: Number(courseId) }),
+      },
       include: subscriptionInclude,
     });
 
@@ -33,7 +47,7 @@ export const getCourseSubscriptionById = async (req, res) => {
     const id = Number(req.params.id);
 
     const subscription = await prisma.courseSubscription.findFirst({
-      where: { id, active: true },
+      where: { id, active: true, ...visibleTo(req.user) },
       include: subscriptionInclude,
     });
 
@@ -52,6 +66,10 @@ export const createCourseSubscription = async (req, res) => {
   try {
     const { courseId } = req.body;
     const subscriberId = req.body.subscriberId ?? req.user.id;
+
+    if (subscriberId !== req.user.id && !isAdmin(req.user)) {
+      return forbidden(res);
+    }
 
     const courseExists = await prisma.course.findFirst({
       where: { id: courseId, active: true },
@@ -73,13 +91,35 @@ export const createCourseSubscription = async (req, res) => {
       });
     }
 
-    const newSubscription = await prisma.courseSubscription.create({
-      data: {
-        courseId,
-        subscriberId,
-      },
-      include: subscriptionInclude,
+    if (courseExists.authorId === subscriberId) {
+      return res
+        .status(400)
+        .json({ message: "No podés inscribirte a tu propio curso" });
+    }
+
+    const previousSubscription = await prisma.courseSubscription.findUnique({
+      where: { subscriberId_courseId: { subscriberId, courseId } },
     });
+
+    if (previousSubscription?.active) {
+      return res
+        .status(409)
+        .json({ message: "El usuario ya está inscripto en este curso" });
+    }
+
+    const newSubscription = previousSubscription
+      ? await prisma.courseSubscription.update({
+          where: { id: previousSubscription.id },
+          data: { active: true },
+          include: subscriptionInclude,
+        })
+      : await prisma.courseSubscription.create({
+          data: {
+            courseId,
+            subscriberId,
+          },
+          include: subscriptionInclude,
+        });
 
     return res.status(201).json(newSubscription);
   } catch (error) {
@@ -107,6 +147,18 @@ export const updateCourseSubscription = async (req, res) => {
       return res.status(404).json({ message: "Inscripción no encontrada" });
     }
 
+    if (!canManage(req.user, existingSubscription.subscriberId)) {
+      return forbidden(res);
+    }
+
+    if (
+      subscriberId !== undefined &&
+      subscriberId !== existingSubscription.subscriberId &&
+      !isAdmin(req.user)
+    ) {
+      return forbidden(res);
+    }
+
     if (courseId !== undefined) {
       const courseExists = await prisma.course.findFirst({
         where: { id: courseId, active: true },
@@ -129,6 +181,25 @@ export const updateCourseSubscription = async (req, res) => {
           message: "El usuario especificado no existe o no está activo",
         });
       }
+    }
+
+    const targetCourse = await prisma.course.findFirst({
+      where: { id: courseId ?? existingSubscription.courseId, active: true },
+    });
+
+    if (!targetCourse) {
+      return res.status(404).json({
+        message: "El curso especificado no existe o no está activo",
+      });
+    }
+
+    const targetSubscriberId =
+      subscriberId ?? existingSubscription.subscriberId;
+
+    if (targetCourse.authorId === targetSubscriberId) {
+      return res
+        .status(400)
+        .json({ message: "No podés inscribirte a tu propio curso" });
     }
 
     const updatedSubscription = await prisma.courseSubscription.update({
@@ -165,6 +236,10 @@ export const deleteCourseSubscription = async (req, res) => {
 
     if (!existingSubscription) {
       return res.status(404).json({ message: "Inscripción no encontrada" });
+    }
+
+    if (!canManage(req.user, existingSubscription.subscriberId)) {
+      return forbidden(res);
     }
 
     await prisma.courseSubscription.update({

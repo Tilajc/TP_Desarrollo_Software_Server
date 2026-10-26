@@ -1,17 +1,37 @@
 import prisma from "../lib/prisma.js";
+import {
+  accessibleContentWhere,
+  authorSelect,
+  canManage,
+  hasCourse,
+} from "../lib/access.js";
 
 const summaryInclude = {
   topic: { include: { subject: true } },
+  author: { select: authorSelect },
 };
+
+const forbidden = (res) =>
+  res
+    .status(403)
+    .json({ message: "No tenés permisos para realizar esta acción" });
+
+const noCourse = (res) =>
+  res
+    .status(403)
+    .json({ message: "Primero hay que crear el curso de esta materia" });
 
 export const getSummaries = async (req, res) => {
   try {
-    const { topicId } = req.query;
+    const { topicId, authorId, subjectId } = req.query;
 
     const summaries = await prisma.summary.findMany({
       where: {
         active: true,
+        ...(await accessibleContentWhere(req.user)),
         ...(topicId && { topicId: Number(topicId) }),
+        ...(authorId && { authorId: Number(authorId) }),
+        ...(subjectId && { topic: { subjectId: Number(subjectId) } }),
       },
       include: summaryInclude,
     });
@@ -28,7 +48,11 @@ export const getSummaryById = async (req, res) => {
     const id = Number(req.params.id);
 
     const summary = await prisma.summary.findFirst({
-      where: { id, active: true },
+      where: {
+        id,
+        active: true,
+        ...(await accessibleContentWhere(req.user)),
+      },
     });
 
     if (!summary) {
@@ -54,6 +78,10 @@ export const createSummary = async (req, res) => {
       return res.status(404).json({
         message: "El tema especificado no existe o no está activo",
       });
+    }
+
+    if (!(await hasCourse(req.user.id, topicExists.subjectId))) {
+      return noCourse(res);
     }
 
     const newSummary = await prisma.summary.create({
@@ -85,6 +113,10 @@ export const updateSummary = async (req, res) => {
       return res.status(404).json({ message: "Resumen no encontrado" });
     }
 
+    if (!canManage(req.user, existingSummary.authorId)) {
+      return forbidden(res);
+    }
+
     if (topicId !== undefined) {
       const topicExists = await prisma.topic.findFirst({
         where: { id: topicId, active: true },
@@ -94,6 +126,13 @@ export const updateSummary = async (req, res) => {
         return res.status(404).json({
           message: "El tema especificado no existe o no está activo",
         });
+      }
+
+      if (
+        topicId !== existingSummary.topicId &&
+        !(await hasCourse(existingSummary.authorId, topicExists.subjectId))
+      ) {
+        return noCourse(res);
       }
     }
 
@@ -123,6 +162,10 @@ export const deleteSummary = async (req, res) => {
 
     if (!existingSummary) {
       return res.status(404).json({ message: "Resumen no encontrado" });
+    }
+
+    if (!canManage(req.user, existingSummary.authorId)) {
+      return forbidden(res);
     }
 
     await prisma.summary.update({

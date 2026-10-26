@@ -1,15 +1,25 @@
 import prisma from "../lib/prisma.js";
+import { accessibleContentWhere, canManage } from "../lib/access.js";
 
 const hintInclude = {
   card: { include: { topic: true } },
 };
+
+const forbidden = (res) =>
+  res
+    .status(403)
+    .json({ message: "No tenés permisos para realizar esta acción" });
 
 export const getHints = async (req, res) => {
   const { cardId } = req.query;
 
   try {
     const hints = await prisma.hint.findMany({
-      where: { active: true, ...(cardId && { cardId: Number(cardId) }) },
+      where: {
+        active: true,
+        card: await accessibleContentWhere(req.user),
+        ...(cardId && { cardId: Number(cardId) }),
+      },
       include: hintInclude,
     });
 
@@ -25,7 +35,11 @@ export const getHintById = async (req, res) => {
     const id = Number(req.params.id);
 
     const hint = await prisma.hint.findFirst({
-      where: { id, active: true },
+      where: {
+        id,
+        active: true,
+        card: await accessibleContentWhere(req.user),
+      },
     });
 
     if (!hint) {
@@ -53,6 +67,10 @@ export const createHint = async (req, res) => {
       });
     }
 
+    if (!canManage(req.user, cardExists.authorId)) {
+      return forbidden(res);
+    }
+
     const newHint = await prisma.hint.create({
       data: {
         content,
@@ -74,10 +92,15 @@ export const updateHint = async (req, res) => {
 
     const existingHint = await prisma.hint.findFirst({
       where: { id, active: true },
+      include: { card: { select: { authorId: true } } },
     });
 
     if (!existingHint) {
       return res.status(404).json({ message: "Pista no encontrada" });
+    }
+
+    if (!canManage(req.user, existingHint.card.authorId)) {
+      return forbidden(res);
     }
 
     if (cardId !== undefined) {
@@ -89,6 +112,10 @@ export const updateHint = async (req, res) => {
         return res.status(404).json({
           message: "La tarjeta especificada no existe o no está activa",
         });
+      }
+
+      if (!canManage(req.user, cardExists.authorId)) {
+        return forbidden(res);
       }
     }
 
@@ -113,10 +140,15 @@ export const deleteHint = async (req, res) => {
 
     const existingHint = await prisma.hint.findFirst({
       where: { id, active: true },
+      include: { card: { select: { authorId: true } } },
     });
 
     if (!existingHint) {
       return res.status(404).json({ message: "Pista no encontrada" });
+    }
+
+    if (!canManage(req.user, existingHint.card.authorId)) {
+      return forbidden(res);
     }
 
     await prisma.hint.update({
