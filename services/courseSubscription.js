@@ -1,8 +1,13 @@
 import prisma from "../lib/prisma.js";
-import { canManage, isAdmin } from "../lib/access.js";
+import { authorSelect, canManage, isAdmin } from "../lib/access.js";
 
 const subscriptionInclude = {
-  course: true,
+  course: {
+    include: {
+      author: { select: authorSelect },
+      subject: true,
+    },
+  },
   subscriber: {
     select: {
       id: true,
@@ -15,10 +20,13 @@ const subscriptionInclude = {
 
 const visibleTo = (user) => (isAdmin(user) ? {} : { subscriberId: user.id });
 
+const activeCourse = { course: { active: true } };
+
 export const getCourseSubscriptionsService = async (user, { courseId }) => {
   return await prisma.courseSubscription.findMany({
     where: {
       active: true,
+      ...activeCourse,
       ...visibleTo(user),
       ...(courseId && { courseId: Number(courseId) }),
     },
@@ -28,7 +36,12 @@ export const getCourseSubscriptionsService = async (user, { courseId }) => {
 
 export const getCourseSubscriptionByIdService = async (user, id) => {
   return await prisma.courseSubscription.findFirst({
-    where: { id: Number(id), active: true, ...visibleTo(user) },
+    where: {
+      id: Number(id),
+      active: true,
+      ...activeCourse,
+      ...visibleTo(user),
+    },
     include: subscriptionInclude,
   });
 };

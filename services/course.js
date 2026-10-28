@@ -13,7 +13,12 @@ export const getCoursesService = async ({ authorId, subjectId }) => {
       ...(authorId && { authorId: Number(authorId) }),
       ...(subjectId && { subjectId: Number(subjectId) }),
     },
-    include: courseInclude,
+    include: {
+      ...courseInclude,
+      _count: {
+        select: { courseSubscriptions: { where: { active: true } } },
+      },
+    },
   });
 };
 

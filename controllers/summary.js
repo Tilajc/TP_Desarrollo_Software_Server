@@ -1,4 +1,4 @@
-import * as summaryService from "../services/summary.js"; // o "../services/summary.service.js"
+import * as summaryService from "../services/summary.js";
 
 export const getSummaries = async (req, res) => {
   try {

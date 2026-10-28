@@ -1,4 +1,4 @@
-import * as hintService from "../services/hint.js"; // o "../services/hint.service.js" según tu preferencia
+import * as hintService from "../services/hint.js";
 
 export const getHints = async (req, res) => {
   try {
