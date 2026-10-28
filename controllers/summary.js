@@ -1,37 +1,26 @@
-import prisma from "../lib/prisma.js";
-import { authorSelect } from "../lib/access.js";
-
-const summaryInclude = {
-  topic: { include: { subject: true } },
-  author: { select: authorSelect },
-};
+import * as summaryService from "../services/summary.js"; // o "../services/summary.service.js"
 
 export const getSummaries = async (req, res) => {
   try {
-    const { topicId } = req.query;
-
-    const summaries = await prisma.summary.findMany({
-      where: {
-        active: true,
-        ...(topicId && { topicId: Number(topicId) }),
-      },
-      include: summaryInclude,
-    });
-
+    const summaries = await summaryService.getSummariesService(
+      req.user,
+      req.query,
+    );
     return res.status(200).json(summaries);
   } catch (error) {
     console.error("Error fetching summaries:", error);
-    return res.status(500).json({ message: "Error al obtener los resúmenes" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener los resúmenes",
+    });
   }
 };
 
 export const getSummaryById = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const summary = await prisma.summary.findFirst({
-      where: { id, active: true },
-    });
+    const summary = await summaryService.getSummaryByIdService(
+      req.user,
+      req.params.id,
+    );
 
     if (!summary) {
       return res.status(404).json({ message: "Resumen no encontrado" });
@@ -40,101 +29,54 @@ export const getSummaryById = async (req, res) => {
     return res.status(200).json(summary);
   } catch (error) {
     console.error("Error fetching summary:", error);
-    return res.status(500).json({ message: "Error al obtener el resumen" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener el resumen",
+    });
   }
 };
 
 export const createSummary = async (req, res) => {
   try {
-    const { title, content, topicId } = req.body;
-
-    const topicExists = await prisma.topic.findFirst({
-      where: { id: topicId, active: true },
-    });
-
-    if (!topicExists) {
-      return res.status(404).json({
-        message: "El tema especificado no existe o no está activo",
-      });
-    }
-
-    const newSummary = await prisma.summary.create({
-      data: {
-        title,
-        content,
-        topicId,
-        authorId: req.user.id,
-      },
-    });
-
+    const newSummary = await summaryService.createSummaryService(
+      req.user,
+      req.body,
+    );
     return res.status(201).json(newSummary);
   } catch (error) {
     console.error("Error creating summary:", error);
-    return res.status(500).json({ message: "Error al crear el resumen" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al crear el resumen",
+    });
   }
 };
 
 export const updateSummary = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const { title, content, topicId } = req.body;
-
-    const existingSummary = await prisma.summary.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingSummary) {
-      return res.status(404).json({ message: "Resumen no encontrado" });
-    }
-
-    if (topicId !== undefined) {
-      const topicExists = await prisma.topic.findFirst({
-        where: { id: topicId, active: true },
-      });
-
-      if (!topicExists) {
-        return res.status(404).json({
-          message: "El tema especificado no existe o no está activo",
-        });
-      }
-    }
-
-    const updatedSummary = await prisma.summary.update({
-      where: { id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(content !== undefined && { content }),
-        ...(topicId !== undefined && { topicId }),
-      },
-    });
-
+    const updatedSummary = await summaryService.updateSummaryService(
+      req.user,
+      req.params.id,
+      req.body,
+    );
     return res.status(200).json(updatedSummary);
   } catch (error) {
     console.error("Error updating summary:", error);
-    return res.status(500).json({ message: "Error al actualizar el resumen" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al actualizar el resumen",
+    });
   }
 };
 
 export const deleteSummary = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const existingSummary = await prisma.summary.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingSummary) {
-      return res.status(404).json({ message: "Resumen no encontrado" });
-    }
-
-    await prisma.summary.update({
-      where: { id },
-      data: { active: false },
-    });
-
-    return res.status(200).json({ message: "Resumen eliminado correctamente" });
+    const result = await summaryService.deleteSummaryService(
+      req.user,
+      req.params.id,
+    );
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error deleting summary:", error);
-    return res.status(500).json({ message: "Error al eliminar el resumen" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al eliminar el resumen",
+    });
   }
 };
