@@ -1,4 +1,4 @@
-import * as cardService from "../services/card.js"; // o "../services/card.service.js"
+import * as cardService from "../services/card.js";
 
 export const getCards = async (req, res) => {
   try {

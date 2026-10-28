@@ -1,4 +1,4 @@
-import * as topicService from "../services/topic.js"; // o "../services/topic.service.js"
+import * as topicService from "../services/topic.js";
 
 export const getTopics = async (req, res) => {
   try {
