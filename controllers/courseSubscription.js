@@ -1,4 +1,4 @@
-import * as courseSubscriptionService from "../services/courseSubscription.js"; // o "../services/courseSubscription.service.js"
+import * as courseSubscriptionService from "../services/courseSubscription.js";
 
 export const getCourseSubscriptions = async (req, res) => {
   try {

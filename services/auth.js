@@ -1,131 +1,78 @@
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
-import { accessibleContentWhere, canManage } from "../lib/access.js";
 
-const hintInclude = {
-  card: { include: { topic: true } },
-};
-
-export const getHintsService = async (user, cardId) => {
-  return await prisma.hint.findMany({
-    where: {
-      active: true,
-      card: await accessibleContentWhere(user),
-      ...(cardId && { cardId: Number(cardId) }),
-    },
-    include: hintInclude,
-  });
-};
-
-export const getHintByIdService = async (user, id) => {
-  return await prisma.hint.findFirst({
-    where: {
-      id: Number(id),
-      active: true,
-      card: await accessibleContentWhere(user),
-    },
-  });
-};
-
-export const createHintService = async (user, { content, cardId }) => {
-  const cardExists = await prisma.card.findFirst({
-    where: { id: cardId, active: true },
+export const loginService = async (body) => {
+  const user = await prisma.user.findFirst({
+    where: { email: body.email, active: true },
   });
 
-  if (!cardExists) {
-    const error = new Error(
-      "La tarjeta especificada no existe o no está activa",
-    );
-    error.status = 404;
+  const passwordMatches =
+    user && (await bcrypt.compare(body.password, user.password));
+
+  if (!passwordMatches) {
+    const error = new Error("Usuario o contraseña incorrectos");
+    error.status = 401;
     throw error;
   }
 
-  if (!canManage(user, cardExists.authorId)) {
-    const error = new Error("No tenés permisos para realizar esta acción");
-    error.status = 403;
-    throw error;
-  }
+  const token = jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
+  );
 
-  return await prisma.hint.create({
-    data: {
-      content,
-      cardId,
+  const returning = {
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
     },
-  });
+  };
+
+  return returning;
 };
 
-export const updateHintService = async (user, id, { content, cardId }) => {
+export const updateProfileService = async (
+  id,
+  { name, lastName, email, password, role },
+) => {
   const parsedId = Number(id);
 
-  const existingHint = await prisma.hint.findFirst({
+  const existingUser = await prisma.user.findFirst({
     where: { id: parsedId, active: true },
-    include: { card: { select: { authorId: true } } },
   });
 
-  if (!existingHint) {
-    const error = new Error("Pista no encontrada");
+  if (!existingUser) {
+    const error = new Error("Usuario no encontrado");
     error.status = 404;
     throw error;
   }
 
-  if (!canManage(user, existingHint.card.authorId)) {
-    const error = new Error("No tenés permisos para realizar esta acción");
-    error.status = 403;
-    throw error;
-  }
-
-  if (cardId !== undefined) {
-    const cardExists = await prisma.card.findFirst({
-      where: { id: cardId, active: true },
+  if (email !== undefined && email !== existingUser.email) {
+    const emailInUse = await prisma.user.findUnique({
+      where: { email },
     });
 
-    if (!cardExists) {
-      const error = new Error(
-        "La tarjeta especificada no existe o no está activa",
-      );
-      error.status = 404;
-      throw error;
-    }
-
-    if (!canManage(user, cardExists.authorId)) {
-      const error = new Error("No tenés permisos para realizar esta acción");
-      error.status = 403;
+    if (emailInUse) {
+      const error = new Error("El email ya está registrado");
+      error.status = 409;
       throw error;
     }
   }
 
-  return await prisma.hint.update({
+  return await prisma.user.update({
     where: { id: parsedId },
     data: {
-      ...(content !== undefined && { content }),
-      ...(cardId !== undefined && { cardId }),
+      ...(name !== undefined && { name }),
+      ...(lastName !== undefined && { lastName }),
+      ...(email !== undefined && { email }),
+      ...(password !== undefined && {
+        password: await bcrypt.hash(password, 10),
+      }),
     },
   });
-};
-
-export const deleteHintService = async (user, id) => {
-  const parsedId = Number(id);
-
-  const existingHint = await prisma.hint.findFirst({
-    where: { id: parsedId, active: true },
-    include: { card: { select: { authorId: true } } },
-  });
-
-  if (!existingHint) {
-    const error = new Error("Pista no encontrada");
-    error.status = 404;
-    throw error;
-  }
-
-  if (!canManage(user, existingHint.card.authorId)) {
-    const error = new Error("No tenés permisos para realizar esta acción");
-    error.status = 403;
-    throw error;
-  }
-
-  await prisma.hint.update({
-    where: { id: parsedId },
-    data: { active: false },
-  });
-
-  return { message: "Pista eliminada correctamente" };
 };

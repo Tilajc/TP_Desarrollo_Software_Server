@@ -1,4 +1,4 @@
-import * as subjectService from "../services/subject.js"; // o "../services/subject.service.js"
+import * as subjectService from "../services/subject.js";
 
 export const getSubjects = async (req, res) => {
   try {
