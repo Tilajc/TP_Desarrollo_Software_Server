@@ -1,25 +1,20 @@
-import prisma from "../lib/prisma.js";
+import * as subjectService from "../services/subject.js"; // o "../services/subject.service.js"
 
 export const getSubjects = async (req, res) => {
   try {
-    const subjects = await prisma.subject.findMany({
-      where: { active: true },
-    });
-
+    const subjects = await subjectService.getSubjectsService();
     return res.status(200).json(subjects);
   } catch (error) {
     console.error("Error fetching subjects:", error);
-    return res.status(500).json({ message: "Error al obtener las materias" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener las materias",
+    });
   }
 };
 
 export const getSubjectById = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const subject = await prisma.subject.findFirst({
-      where: { id, active: true },
-    });
+    const subject = await subjectService.getSubjectByIdService(req.params.id);
 
     if (!subject) {
       return res.status(404).json({ message: "Materia no encontrada" });
@@ -28,76 +23,47 @@ export const getSubjectById = async (req, res) => {
     return res.status(200).json(subject);
   } catch (error) {
     console.error("Error fetching subject:", error);
-    return res.status(500).json({ message: "Error al obtener la materia" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener la materia",
+    });
   }
 };
 
 export const createSubject = async (req, res) => {
   try {
-    const { name, description } = req.body;
-
-    const newSubject = await prisma.subject.create({
-      data: {
-        name,
-        description,
-      },
-    });
-
+    const newSubject = await subjectService.createSubjectService(req.body);
     return res.status(201).json(newSubject);
   } catch (error) {
     console.error("Error creating subject:", error);
-    return res.status(500).json({ message: "Error al crear la materia" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al crear la materia",
+    });
   }
 };
 
 export const updateSubject = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const { name, description } = req.body;
-
-    const existingSubject = await prisma.subject.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingSubject) {
-      return res.status(404).json({ message: "Materia no encontrada" });
-    }
-
-    const updatedSubject = await prisma.subject.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-      },
-    });
-
+    const updatedSubject = await subjectService.updateSubjectService(
+      req.params.id,
+      req.body,
+    );
     return res.status(200).json(updatedSubject);
   } catch (error) {
     console.error("Error updating subject:", error);
-    return res.status(500).json({ message: "Error al actualizar la materia" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al actualizar la materia",
+    });
   }
 };
 
 export const deleteSubject = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const existingSubject = await prisma.subject.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingSubject) {
-      return res.status(404).json({ message: "Materia no encontrada" });
-    }
-
-    await prisma.subject.update({
-      where: { id },
-      data: { active: false },
-    });
-
-    return res.status(200).json({ message: "Materia eliminada correctamente" });
+    const result = await subjectService.deleteSubjectService(req.params.id);
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error deleting subject:", error);
-    return res.status(500).json({ message: "Error al eliminar la materia" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al eliminar la materia",
+    });
   }
 };
