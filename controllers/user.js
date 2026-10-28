@@ -1,36 +1,20 @@
-import prisma from "../lib/prisma.js";
-import bcrypt from "bcryptjs";
-
-const userSelect = {
-  id: true,
-  name: true,
-  lastName: true,
-  email: true,
-  role: true,
-};
+import * as userService from "../services/user.js"; // o "../services/user.service.js"
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      where: { active: true },
-      select: userSelect,
-    });
-
+    const users = await userService.getUsersService();
     return res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    return res.status(500).json({ message: "Error al obtener los usuarios" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener los usuarios",
+    });
   }
 };
 
 export const getUserById = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const user = await prisma.user.findFirst({
-      where: { id, active: true },
-      select: userSelect,
-    });
+    const user = await userService.getUserByIdService(req.params.id);
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -39,154 +23,74 @@ export const getUserById = async (req, res) => {
     return res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
-    return res.status(500).json({ message: "Error al obtener el usuario" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener el usuario",
+    });
   }
 };
 
 export const createUser = async (req, res) => {
   try {
-    const { name, lastName, email, password, role } = req.body;
-
-    const emailInUse = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (emailInUse) {
-      return res.status(409).json({ message: "El email ya está registrado" });
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        lastName,
-        email,
-        password: await bcrypt.hash(password, 10),
-        role,
-      },
-      select: userSelect,
-    });
-
+    const newUser = await userService.createUserService(req.body);
     return res.status(201).json(newUser);
   } catch (error) {
     console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Error al crear el usuario" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al crear el usuario",
+    });
   }
 };
 
 export const updateUser = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const { name, lastName, email, password, role } = req.body;
-
-    const existingUser = await prisma.user.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    if (email !== undefined && email !== existingUser.email) {
-      const emailInUse = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (emailInUse) {
-        return res.status(409).json({ message: "El email ya está registrado" });
-      }
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(lastName !== undefined && { lastName }),
-        ...(email !== undefined && { email }),
-        ...(password !== undefined && {
-          password: await bcrypt.hash(password, 10),
-        }),
-        ...(role !== undefined && { role }),
-      },
-      select: userSelect,
-    });
-
+    const updatedUser = await userService.updateUserService(
+      req.params.id,
+      req.body,
+    );
     return res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error updating user:", error);
-    return res.status(500).json({ message: "Error al actualizar el usuario" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al actualizar el usuario",
+    });
   }
 };
 
 export const deleteUser = async (req, res) => {
   try {
-    const id = Number(req.params.id);
-
-    const existingUser = await prisma.user.findFirst({
-      where: { id, active: true },
-    });
-
-    if (!existingUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    await prisma.user.update({
-      where: { id },
-      data: { active: false },
-    });
-
-    return res.status(200).json({ message: "Usuario eliminado correctamente" });
+    const result = await userService.deleteUserService(req.params.id);
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error deleting user:", error);
-    return res.status(500).json({ message: "Error al eliminar el usuario" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al eliminar el usuario",
+    });
   }
 };
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, lastName, email, password } = req.body;
-
-    const emailInUse = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (emailInUse) {
-      return res.status(409).json({ message: "El email ya está registrado" });
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        lastName,
-        email,
-        password: await bcrypt.hash(password, 10),
-      },
-      select: userSelect,
-    });
-
+    const newUser = await userService.registerUserService(req.body);
     return res.status(201).json(newUser);
   } catch (error) {
     console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Error al crear el usuario" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al crear el usuario",
+    });
   }
 };
 
 export const editProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { name, lastName } = req.body;
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(lastName !== undefined && { lastName }),
-      },
-      select: userSelect,
-    });
-
+    const updatedUser = await userService.editProfileService(
+      req.user.id,
+      req.body,
+    );
     return res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error updating profile:", error);
-    return res.status(500).json({ message: "Error al actualizar el perfil" });
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al actualizar el perfil",
+    });
   }
 };
