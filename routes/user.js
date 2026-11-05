@@ -8,13 +8,17 @@ import {
   registerUser,
   editProfile,
 } from "../controllers/user.js";
-import { createUserSchema, updateUserSchema } from "../schemas/user.js";
+import {
+  createUserSchema,
+  updateUserSchema,
+  registerUserSchema,
+} from "../schemas/user.js";
 import validate from "../middlewares/validate.js";
 import { authenticate, authorize } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.post("/register", validate(createUserSchema, "body"), registerUser);
+router.post("/register", validate(registerUserSchema, "body"), registerUser);
 
 router.use(authenticate);
 

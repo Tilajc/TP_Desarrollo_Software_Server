@@ -3,6 +3,26 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 
 export const loginService = async (body) => {
+  const verifyResponse = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: process.env.TURNSTILE_SECRET_KEY,
+        response: body.turnstileToken,
+      }),
+    },
+  );
+
+  const captchaData = await verifyResponse.json();
+
+  if (!captchaData.success) {
+    const error = new Error("Verificación de captcha fallida.");
+    error.status = 400;
+    throw error;
+  }
+
   const user = await prisma.user.findFirst({
     where: { email: body.email, active: true },
   });
@@ -38,7 +58,7 @@ export const loginService = async (body) => {
 
 export const updateProfileService = async (
   id,
-  { name, lastName, email, password, role },
+  { name, lastName, email, password },
 ) => {
   const parsedId = Number(id);
 
