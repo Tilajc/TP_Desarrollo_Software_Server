@@ -4,8 +4,6 @@ import cors from "cors";
 
 const app = express();
 
-const PORT = 3000;
-
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
@@ -20,8 +18,13 @@ app.get("/", (req, res) => {
   res.send("Server is running on background");
 });
 
-app.listen(PORT, () => {
-  console.log("Server is running on port", PORT);
-});
-
 app.use("/api", router);
+
+export default app;
+
+if (process.env.NODE_ENV !== "test") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log("Server is running on port", PORT);
+  });
+}

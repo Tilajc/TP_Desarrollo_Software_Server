@@ -7,7 +7,7 @@
     "start": "nodemon index.js",
     "seed": "node prisma/seed.js",
     "build": "prisma generate",
-    "test": "jest",
+    "test": "NODE_ENV=test jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
@@ -35,7 +35,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@babel/core": "^8.1.0",
+    "@babel/preset-env": "^8.0.7",
     "@eslint/js": "^10.0.1",
+    "babel-jest": "^30.5.2",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
