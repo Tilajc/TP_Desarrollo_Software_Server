@@ -1,4 +1,24 @@
 import prisma from "../lib/prisma.js";
+import { normalizeText } from "../lib/text.js";
+
+const assertUniqueName = async (name, subjectId, excludeId) => {
+  const topics = await prisma.topic.findMany({
+    where: {
+      active: true,
+      subjectId,
+      ...(excludeId && { id: { not: excludeId } }),
+    },
+    select: { name: true },
+  });
+
+  const wanted = normalizeText(name);
+
+  if (topics.some((topic) => normalizeText(topic.name) === wanted)) {
+    const error = new Error("Ya existe un tema con ese nombre en esta materia");
+    error.status = 409;
+    throw error;
+  }
+};
 
 export const getTopicsService = async ({ subjectId }) => {
   return await prisma.topic.findMany({
@@ -29,6 +49,8 @@ export const createTopicService = async ({ name, subjectId }) => {
     error.status = 404;
     throw error;
   }
+
+  await assertUniqueName(name, subjectId);
 
   return await prisma.topic.create({
     data: {
@@ -66,6 +88,14 @@ export const updateTopicService = async (id, { name, subjectId }) => {
     }
   }
 
+  if (name !== undefined || subjectId !== undefined) {
+    await assertUniqueName(
+      name ?? existingTopic.name,
+      subjectId ?? existingTopic.subjectId,
+      parsedId,
+    );
+  }
+
   return await prisma.topic.update({
     where: { id: parsedId },
     data: {
@@ -89,10 +119,24 @@ export const deleteTopicService = async (id) => {
     throw error;
   }
 
-  await prisma.topic.update({
-    where: { id: parsedId },
-    data: { active: false },
-  });
+  await prisma.$transaction([
+    prisma.hint.updateMany({
+      where: { active: true, card: { topicId: parsedId } },
+      data: { active: false },
+    }),
+    prisma.card.updateMany({
+      where: { active: true, topicId: parsedId },
+      data: { active: false },
+    }),
+    prisma.summary.updateMany({
+      where: { active: true, topicId: parsedId },
+      data: { active: false },
+    }),
+    prisma.topic.update({
+      where: { id: parsedId },
+      data: { active: false },
+    }),
+  ]);
 
   return { message: "Tema eliminado correctamente" };
 };

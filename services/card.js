@@ -146,10 +146,16 @@ export const deleteCardService = async (user, id) => {
     throw error;
   }
 
-  await prisma.card.update({
-    where: { id: parsedId },
-    data: { active: false },
-  });
+  await prisma.$transaction([
+    prisma.hint.updateMany({
+      where: { active: true, cardId: parsedId },
+      data: { active: false },
+    }),
+    prisma.card.update({
+      where: { id: parsedId },
+      data: { active: false },
+    }),
+  ]);
 
   return { message: "Tarjeta eliminada correctamente" };
 };
