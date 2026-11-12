@@ -146,14 +146,16 @@ export const deleteCardService = async (user, id) => {
     throw error;
   }
 
+  const deletedAt = new Date();
+
   await prisma.$transaction([
     prisma.hint.updateMany({
       where: { active: true, cardId: parsedId },
-      data: { active: false },
+      data: { active: false, deletedAt },
     }),
     prisma.card.update({
       where: { id: parsedId },
-      data: { active: false },
+      data: { active: false, deletedAt },
     }),
   ]);
 

@@ -20,6 +20,7 @@ CREATE TABLE "Subject" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Subject_pkey" PRIMARY KEY ("id")
 );
@@ -28,6 +29,7 @@ CREATE TABLE "Subject" (
 CREATE TABLE "Course" (
     "id" SERIAL NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
     "authorId" INTEGER NOT NULL,
     "subjectId" INTEGER NOT NULL,
 
@@ -59,6 +61,7 @@ CREATE TABLE "Topic" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
     "subjectId" INTEGER NOT NULL,
 
     CONSTRAINT "Topic_pkey" PRIMARY KEY ("id")
@@ -71,6 +74,7 @@ CREATE TABLE "Summary" (
     "content" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
     "topicId" INTEGER NOT NULL,
     "authorId" INTEGER NOT NULL,
 
@@ -83,6 +87,7 @@ CREATE TABLE "Card" (
     "question" TEXT NOT NULL,
     "answer" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
     "topicId" INTEGER NOT NULL,
     "authorId" INTEGER NOT NULL,
 
@@ -94,6 +99,7 @@ CREATE TABLE "Hint" (
     "id" SERIAL NOT NULL,
     "content" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "deletedAt" TIMESTAMP(3),
     "cardId" INTEGER NOT NULL,
 
     CONSTRAINT "Hint_pkey" PRIMARY KEY ("id")
@@ -103,6 +109,9 @@ CREATE TABLE "Hint" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Subject_name_key" ON "Subject"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Course_authorId_subjectId_key" ON "Course"("authorId", "subjectId");
 
 -- CreateIndex
@@ -110,6 +119,9 @@ CREATE UNIQUE INDEX "CourseSubscription_subscriberId_courseId_key" ON "CourseSub
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserSubscription_subscriberId_authorId_key" ON "UserSubscription"("subscriberId", "authorId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Topic_name_key" ON "Topic"("name");
 
 -- AddForeignKey
 ALTER TABLE "Course" ADD CONSTRAINT "Course_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
