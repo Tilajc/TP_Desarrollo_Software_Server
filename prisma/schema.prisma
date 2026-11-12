@@ -29,18 +29,20 @@ model User {
 }
 
 model Subject {
-  id          Int     @id @default(autoincrement())
-  name        String
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
   description String?
-  active      Boolean @default(true)
+  active      Boolean   @default(true)
+  deletedAt   DateTime?
 
   courses Course[]
   topics  Topic[]
 }
 
 model Course {
-  id     Int     @id @default(autoincrement())
-  active Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  active    Boolean   @default(true)
+  deletedAt DateTime?
 
   authorId Int
   author   User @relation(fields: [authorId], references: [id])
@@ -80,9 +82,10 @@ model UserSubscription {
 }
 
 model Topic {
-  id     Int     @id @default(autoincrement())
-  name   String
-  active Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  active    Boolean   @default(true)
+  deletedAt DateTime?
 
   subjectId Int
   subject   Subject @relation(fields: [subjectId], references: [id])
@@ -92,11 +95,12 @@ model Topic {
 }
 
 model Summary {
-  id      Int      @id @default(autoincrement())
-  title   String
-  content String
-  date    DateTime @default(now())
-  active  Boolean  @default(true)
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  date      DateTime  @default(now())
+  active    Boolean   @default(true)
+  deletedAt DateTime?
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
@@ -106,10 +110,11 @@ model Summary {
 }
 
 model Card {
-  id       Int     @id @default(autoincrement())
-  question String
-  answer   String
-  active   Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  question  String
+  answer    String
+  active    Boolean   @default(true)
+  deletedAt DateTime?
 
   topicId Int
   topic   Topic @relation(fields: [topicId], references: [id])
@@ -121,9 +126,10 @@ model Card {
 }
 
 model Hint {
-  id      Int     @id @default(autoincrement())
-  content String
-  active  Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  content   String
+  active    Boolean   @default(true)
+  deletedAt DateTime?
 
   cardId Int
   card   Card @relation(fields: [cardId], references: [id])

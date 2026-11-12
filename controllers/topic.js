@@ -67,3 +67,27 @@ export const deleteTopic = async (req, res) => {
     });
   }
 };
+
+export const getDeletedTopics = async (req, res) => {
+  try {
+    const topics = await topicService.getDeletedTopicsService();
+    return res.status(200).json(topics);
+  } catch (error) {
+    console.error("Error fetching deleted topics:", error);
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al obtener los temas eliminados",
+    });
+  }
+};
+
+export const restoreTopic = async (req, res) => {
+  try {
+    const result = await topicService.restoreTopicService(req.params.id);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error restoring topic:", error);
+    return res.status(error.status || 500).json({
+      message: error.message || "Error al restaurar el tema",
+    });
+  }
+};

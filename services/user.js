@@ -121,7 +121,28 @@ export const registerUserService = async ({
   lastName,
   email,
   password,
+  turnstileToken,
 }) => {
+  const verifyResponse = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: process.env.TURNSTILE_SECRET_KEY,
+        response: turnstileToken,
+      }),
+    },
+  );
+
+  const captchaData = await verifyResponse.json();
+
+  if (!captchaData.success) {
+    const error = new Error("Verificación de captcha fallida.");
+    error.status = 400;
+    throw error;
+  }
+
   const emailInUse = await prisma.user.findUnique({
     where: { email },
   });

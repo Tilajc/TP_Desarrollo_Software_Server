@@ -5,6 +5,8 @@ import {
   createSubject,
   updateSubject,
   deleteSubject,
+  getDeletedSubjects,
+  restoreSubject,
 } from "../controllers/subject.js";
 import {
   createSubjectSchema,
@@ -16,6 +18,7 @@ import { authorize } from "../middlewares/auth.js";
 const router = Router();
 
 router.get("/", getSubjects);
+router.get("/deleted", authorize("ADMIN"), getDeletedSubjects);
 router.get("/:id", getSubjectById);
 router.post(
   "/",
@@ -30,5 +33,6 @@ router.put(
   updateSubject,
 );
 router.delete("/:id", authorize("ADMIN"), deleteSubject);
+router.post("/:id/restore", authorize("ADMIN"), restoreSubject);
 
 export default router;

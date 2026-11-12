@@ -46,4 +46,13 @@ export const createUserSchema = z.object({
     .nullable(),
 });
 
+export const registerUserSchema = createUserSchema.extend({
+  turnstileToken: z
+    .string({
+      required_error: "El captcha es requerido",
+      invalid_type_error: "El token del captcha debe ser un texto",
+    })
+    .min(1, "El captcha es requerido"),
+});
+
 export const updateUserSchema = createUserSchema.partial();

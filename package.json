@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js",
     "seed": "node prisma/seed.js",
-    "build": "prisma generate"
+    "build": "prisma generate",
+    "test": "NODE_ENV=test jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -33,13 +35,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@babel/core": "^8.1.0",
+    "@babel/preset-env": "^8.0.7",
     "@eslint/js": "^10.0.1",
+    "babel-jest": "^30.5.2",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.6.0",
+    "jest": "^30.5.2",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
-    "prisma": "^7.9.1"
+    "prisma": "^7.9.1",
+    "supertest": "^7.3.1"
   }
 }
