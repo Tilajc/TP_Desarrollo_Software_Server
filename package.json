@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
+    "start:e2e": "node --env-file=.env.e2e index.js",
     "seed": "node prisma/seed.js",
     "build": "prisma generate",
     "test": "NODE_ENV=test jest",

@@ -78,7 +78,8 @@ describe("Topic Services - Unit Tests", () => {
       await expect(
         createTopicService({ name: "Calculo i", subjectId: 1 }),
       ).rejects.toMatchObject({
-        message: "Ya existe un tema con ese nombre en esta materia",
+        message:
+          "Ya existe un tema con ese nombre en esta materia puede que esté eliminado",
         status: 409,
       });
     });
