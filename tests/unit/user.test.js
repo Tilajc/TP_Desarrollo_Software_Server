@@ -105,11 +105,6 @@ describe("User Services - Unit Tests", () => {
 
       prisma.user.findUnique.mockResolvedValue(null);
 
-      const createdUserMock = {
-        id: 3,
-        ...userData,
-        password: "hashed_password_mock",
-      };
       prisma.user.create.mockResolvedValue({
         id: 3,
         name: userData.name,
